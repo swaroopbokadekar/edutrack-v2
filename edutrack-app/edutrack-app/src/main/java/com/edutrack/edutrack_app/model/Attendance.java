@@ -10,20 +10,24 @@ public class Attendance {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long userId; // The Student ID
+    private Long userId; 
     private Long classId;
-    private String status; // Present, Absent, Late
+    private String status; 
     private LocalDate date;
 
-    // Getters and Setters
+    // Explicit Getters and Setters (This will fix the red lines)
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
+
     public Long getClassId() { return classId; }
     public void setClassId(Long classId) { this.classId = classId; }
+
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
     public LocalDate getDate() { return date; }
     public void setDate(LocalDate date) { this.date = date; }
 }
