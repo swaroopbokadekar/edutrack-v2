@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-// --- STEP 1: MOVE SUB-COMPONENTS OUTSIDE THE MAIN FUNCTION ---
-// This prevents the "One letter at a time" bug.
+// --- STEP 1: SUB-COMPONENTS (Outside to prevent re-render focus bugs) ---
 
 const DashboardHome = ({ studentList, chartData, setActiveTab }) => (
   <>
@@ -61,7 +60,7 @@ const AttendanceView = ({ studentList, newStudentName, setNewStudentName, enroll
         <input 
           type="text" 
           placeholder="Enroll Student..." 
-          value={newStudentName} // Controlled Input: Fixed Typing!
+          value={newStudentName}
           onChange={(e) => setNewStudentName(e.target.value)}
           className="px-4 py-2 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-600 w-64 text-black"
         />
@@ -94,34 +93,72 @@ const AttendanceView = ({ studentList, newStudentName, setNewStudentName, enroll
   </div>
 );
 
-const GradeBookView = ({ studentList }) => (
-  <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden text-left">
-    <div className="p-8 border-b border-gray-50 flex justify-between items-center">
-      <h3 className="text-xl font-black text-indigo-950">Grade Book - Semester 1</h3>
-      <button className="text-indigo-600 font-bold text-sm">View Full Report →</button>
-    </div>
-    <table className="w-full text-left">
-      <thead className="bg-gray-50 text-gray-400 text-[10px] font-black uppercase tracking-widest">
-        <tr>
-          <th className="px-8 py-4">Student</th>
-          <th className="px-8 py-4">Total Marks</th>
-          <th className="px-8 py-4 text-center">Final Grade</th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-gray-50">
-        {studentList.map((s) => (
-          <tr key={s.id} className="hover:bg-gray-50/50 transition">
-            <td className="px-8 py-5 font-bold text-indigo-950">{s.name}</td>
-            <td className="px-8 py-5 text-gray-500 font-medium">--</td>
-            <td className="px-8 py-5 text-center">
-              <span className="px-4 py-1 rounded-full text-xs font-black border bg-gray-100 text-gray-400">N/A</span>
-            </td>
+const GradeBookView = ({ studentList, saveGrade }) => {
+  const [marks, setMarks] = useState({});
+
+  const handleInputChange = (studentId, field, value) => {
+    setMarks(prev => ({
+      ...prev,
+      [studentId]: {
+        ...prev[studentId],
+        [field]: value
+      }
+    }));
+  };
+
+  return (
+    <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden text-left p-8">
+      <h3 className="text-2xl font-black text-indigo-950 mb-6">Grade Book - Semester 1</h3>
+      <table className="w-full text-left">
+        <thead className="bg-gray-50 text-gray-400 text-[10px] font-black uppercase tracking-widest">
+          <tr>
+            <th className="px-8 py-4">Student Name</th>
+            <th className="px-8 py-4">Quiz</th>
+            <th className="px-8 py-4">Midterm</th>
+            <th className="px-8 py-4">Assignment</th>
+            <th className="px-8 py-4 text-center">Action</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-);
+        </thead>
+        <tbody className="divide-y divide-gray-50">
+          {studentList.map((s) => (
+            <tr key={s.id}>
+              <td className="px-8 py-5 font-bold text-indigo-950">{s.name}</td>
+              <td className="px-8 py-5">
+                <input 
+                  type="number" placeholder="0"
+                  className="w-16 p-2 border rounded-xl focus:ring-2 focus:ring-indigo-100 outline-none text-center"
+                  onChange={(e) => handleInputChange(s.id, 'quiz', e.target.value)}
+                />
+              </td>
+              <td className="px-8 py-5">
+                <input 
+                  type="number" placeholder="0"
+                  className="w-16 p-2 border rounded-xl focus:ring-2 focus:ring-indigo-100 outline-none text-center"
+                  onChange={(e) => handleInputChange(s.id, 'midterm', e.target.value)}
+                />
+              </td>
+              <td className="px-8 py-5">
+                <input 
+                  type="number" placeholder="0"
+                  className="w-16 p-2 border rounded-xl focus:ring-2 focus:ring-indigo-100 outline-none text-center"
+                  onChange={(e) => handleInputChange(s.id, 'assignment', e.target.value)}
+                />
+              </td>
+              <td className="px-8 py-5 text-center">
+                <button 
+                  onClick={() => saveGrade(s.id, marks[s.id])}
+                  className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold text-xs hover:bg-indigo-700 transition cursor-pointer"
+                >
+                  Save Grade
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
 
 // --- STEP 2: MAIN DASHBOARD FUNCTION ---
 
@@ -191,6 +228,35 @@ const TeacherDashboard = () => {
     }
   };
 
+  // NEW: Save Grade Logic
+  const saveGrade = async (studentId, studentMarks) => {
+    if (!studentMarks) return alert("Please enter marks first!");
+
+    const payload = {
+      userId: studentId,
+      classId: 101,
+      quiz: studentMarks.quiz || 0,
+      midterm: studentMarks.midterm || 0,
+      assignment: studentMarks.assignment || 0,
+      role: "TEACHER" 
+    };
+
+    try {
+      const response = await fetch('http://localhost:8080/api/grades/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (response.ok) {
+        alert("Grade saved to MySQL!");
+      } else {
+        alert("Access Denied or Server Error");
+      }
+    } catch (error) {
+      alert("Backend Connection Failed");
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-50 font-sans text-left">
       <aside className="w-64 bg-indigo-950 text-white flex flex-col fixed h-full">
@@ -221,7 +287,6 @@ const TeacherDashboard = () => {
           <div className="w-12 h-12 bg-indigo-100 rounded-full border-2 border-white shadow-md flex items-center justify-center font-bold text-indigo-600">SP</div>
         </header>
 
-        {/* --- STEP 3: RENDER THE COMPONENTS BY PASSING PROPS --- */}
         {activeTab === 'Dashboard' && (
           <DashboardHome 
             studentList={studentList} 
@@ -240,7 +305,10 @@ const TeacherDashboard = () => {
           />
         )}
         {activeTab === 'Grade Book' && (
-          <GradeBookView studentList={studentList} />
+          <GradeBookView 
+            studentList={studentList} 
+            saveGrade={saveGrade} 
+          />
         )}
         
         {!['Dashboard', 'Attendance', 'Grade Book'].includes(activeTab) && (
