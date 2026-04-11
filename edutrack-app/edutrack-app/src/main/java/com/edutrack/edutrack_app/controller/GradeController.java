@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/grades")
@@ -15,20 +16,29 @@ public class GradeController {
     @Autowired
     private GradeRepository gradeRepository;
 
-    // Students and Teachers can both use this to view
+    // View grades for a specific student
     @GetMapping("/{userId}")
     public List<Grade> getUserGrades(@PathVariable Long userId) {
         return gradeRepository.findByUserId(userId);
     }
 
-    // We will simulate a "Teacher Check" here
+    // Update grades with Teacher/Admin check
     @PostMapping("/update")
-    public String updateGrade(@RequestBody Grade grade, @RequestParam String role) {
+    public String updateGrade(@RequestBody Map<String, Object> payload) {
+        String role = (String) payload.get("role");
+        
         if ("TEACHER".equalsIgnoreCase(role) || "ADMIN".equalsIgnoreCase(role)) {
+            Grade grade = new Grade();
+            grade.setUserId(Long.valueOf(payload.get("userId").toString()));
+            grade.setClassId(Long.valueOf(payload.get("classId").toString()));
+            grade.setQuiz(Integer.parseInt(payload.get("quiz").toString()));
+            grade.setMidterm(Integer.parseInt(payload.get("midterm").toString()));
+            grade.setAssignment(Integer.parseInt(payload.get("assignment").toString()));
+            
             gradeRepository.save(grade);
             return "Grade updated successfully!";
         } else {
-            return "Error: Only Teachers can edit grades!";
+            return "Access Denied: You do not have permission to edit grades.";
         }
     }
 }

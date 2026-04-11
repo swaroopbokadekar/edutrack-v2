@@ -7,5 +7,8 @@ import java.util.List;
 
 @Repository
 public interface GradeRepository extends JpaRepository<Grade, Long> {
+    
+    // Logic: This allows the system to fetch all grades belonging 
+    // to a specific Student ID (userId) from edutrack_db.grades
     List<Grade> findByUserId(Long userId);
 }

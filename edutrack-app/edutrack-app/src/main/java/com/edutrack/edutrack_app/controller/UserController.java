@@ -15,30 +15,29 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
+    // Verified: Basic GET logic preserved
     @GetMapping
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
-    // NEW: Method to Enroll a Student
+    // NEW: Method to Enroll a Student with DB Safety
     @PostMapping("/add")
     public User addStudent(@RequestBody User user) {
-        // 1. Set the role to STUDENT (since a teacher is adding them)
+        // 1. Set role
         user.setRole("STUDENT");
 
-        // 2. Fix the Email (MySQL won't save without this)
-        // We create a unique email based on their name and current time
+        // 2. Fix Email (Constraint Safety)
         if (user.getEmail() == null || user.getEmail().isEmpty()) {
             String cleanName = user.getName().toLowerCase().replace(" ", "");
             user.setEmail(cleanName + "_" + System.currentTimeMillis() + "@edutrack.com");
         }
 
-        // 3. Fix the Password (MySQL won't save without this)
+        // 3. Fix Password (Constraint Safety)
         if (user.getPassword() == null || user.getPassword().isEmpty()) {
-            user.setPassword("1234"); // Default password for new students
+            user.setPassword("1234");
         }
 
-        // 4. Save to edutrack_db.users
         return userRepository.save(user);
     }
 

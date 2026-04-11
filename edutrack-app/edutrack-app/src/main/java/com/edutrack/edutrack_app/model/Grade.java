@@ -9,14 +9,15 @@ public class Grade {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long userId; // The Student ID
+    private Long userId; // Links to edutrack_db.users.id
     private Long classId;
     private Integer quiz;
     private Integer midterm;
     private Integer assignment;
     
+    // insertable=false means we let the Database calculation handle the value
     @Column(insertable = false, updatable = false)
-    private Double total; // This is calculated by MySQL automatically
+    private Double total; 
 
     // Getters and Setters
     public Long getId() { return id; }
@@ -32,4 +33,5 @@ public class Grade {
     public Integer getAssignment() { return assignment; }
     public void setAssignment(Integer assignment) { this.assignment = assignment; }
     public Double getTotal() { return total; }
+    public void setTotal(Double total) { this.total = total; }
 }
