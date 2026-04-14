@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-// --- STEP 1: SUB-COMPONENTS (Outside to prevent re-render focus bugs) ---
+// --- SUB-COMPONENTS ---
 
 const DashboardHome = ({ studentList, chartData, setActiveTab }) => (
   <>
@@ -25,8 +25,9 @@ const DashboardHome = ({ studentList, chartData, setActiveTab }) => (
 
     <div className="grid grid-cols-3 gap-8 mb-10 text-left">
       <div className="col-span-2 bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
-        <h3 className="text-xl font-black mb-6 text-indigo-950">Class Performance</h3>
-        <div className="h-64">
+        <h3 className="text-xl font-black mb-6 text-indigo-950">Class Performance (Real-time)</h3>
+        {/* FIXED: Explicit height container to solve width(-1) console error */}
+        <div className="h-[300px] w-full"> 
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
@@ -42,7 +43,7 @@ const DashboardHome = ({ studentList, chartData, setActiveTab }) => (
       <div className="bg-indigo-900 p-8 rounded-[2.5rem] shadow-xl text-white">
         <h3 className="text-xl font-black mb-6">Next Class</h3>
         <div className="bg-white/10 p-6 rounded-3xl border border-white/10 mb-4">
-            <p className="text-indigo-300 text-xs font-bold uppercase mb-1">Mathematics (SPED)</p>
+            <p className="text-indigo-300 text-xs font-bold uppercase mb-1">Mathematics</p>
             <h4 className="text-lg font-black">Room 104 • 10:30 AM</h4>
             <p className="text-indigo-200 text-sm mt-2 font-medium">{studentList.length} Students enrolled</p>
         </div>
@@ -67,7 +68,6 @@ const AttendanceView = ({ studentList, newStudentName, setNewStudentName, enroll
         <button onClick={enrollStudent} className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-indigo-700 transition">+ Enroll</button>
       </div>
     </div>
-
     <table className="w-full text-left">
       <thead className="bg-gray-50 text-gray-400 text-[10px] font-black uppercase tracking-widest">
         <tr>
@@ -95,15 +95,8 @@ const AttendanceView = ({ studentList, newStudentName, setNewStudentName, enroll
 
 const GradeBookView = ({ studentList, saveGrade }) => {
   const [marks, setMarks] = useState({});
-
   const handleInputChange = (studentId, field, value) => {
-    setMarks(prev => ({
-      ...prev,
-      [studentId]: {
-        ...prev[studentId],
-        [field]: value
-      }
-    }));
+    setMarks(prev => ({ ...prev, [studentId]: { ...prev[studentId], [field]: value } }));
   };
 
   return (
@@ -113,9 +106,9 @@ const GradeBookView = ({ studentList, saveGrade }) => {
         <thead className="bg-gray-50 text-gray-400 text-[10px] font-black uppercase tracking-widest">
           <tr>
             <th className="px-8 py-4">Student Name</th>
-            <th className="px-8 py-4">Quiz</th>
-            <th className="px-8 py-4">Midterm</th>
-            <th className="px-8 py-4">Assignment</th>
+            <th className="px-8 py-4 text-center">Quiz</th>
+            <th className="px-8 py-4 text-center">Midterm</th>
+            <th className="px-8 py-4 text-center">Assignment</th>
             <th className="px-8 py-4 text-center">Action</th>
           </tr>
         </thead>
@@ -123,34 +116,17 @@ const GradeBookView = ({ studentList, saveGrade }) => {
           {studentList.map((s) => (
             <tr key={s.id}>
               <td className="px-8 py-5 font-bold text-indigo-950">{s.name}</td>
-              <td className="px-8 py-5">
-                <input 
-                  type="number" placeholder="0"
-                  className="w-16 p-2 border rounded-xl focus:ring-2 focus:ring-indigo-100 outline-none text-center"
-                  onChange={(e) => handleInputChange(s.id, 'quiz', e.target.value)}
-                />
-              </td>
-              <td className="px-8 py-5">
-                <input 
-                  type="number" placeholder="0"
-                  className="w-16 p-2 border rounded-xl focus:ring-2 focus:ring-indigo-100 outline-none text-center"
-                  onChange={(e) => handleInputChange(s.id, 'midterm', e.target.value)}
-                />
-              </td>
-              <td className="px-8 py-5">
-                <input 
-                  type="number" placeholder="0"
-                  className="w-16 p-2 border rounded-xl focus:ring-2 focus:ring-indigo-100 outline-none text-center"
-                  onChange={(e) => handleInputChange(s.id, 'assignment', e.target.value)}
-                />
+              <td className="px-8 py-5 text-center">
+                <input type="number" placeholder="0" className="w-20 p-2 border rounded-xl outline-none text-center" onChange={(e) => handleInputChange(s.id, 'quiz', e.target.value)} />
               </td>
               <td className="px-8 py-5 text-center">
-                <button 
-                  onClick={() => saveGrade(s.id, marks[s.id])}
-                  className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold text-xs hover:bg-indigo-700 transition cursor-pointer"
-                >
-                  Save Grade
-                </button>
+                <input type="number" placeholder="0" className="w-20 p-2 border rounded-xl outline-none text-center" onChange={(e) => handleInputChange(s.id, 'midterm', e.target.value)} />
+              </td>
+              <td className="px-8 py-5 text-center">
+                <input type="number" placeholder="0" className="w-20 p-2 border rounded-xl outline-none text-center" onChange={(e) => handleInputChange(s.id, 'assignment', e.target.value)} />
+              </td>
+              <td className="px-8 py-5 text-center">
+                <button onClick={() => saveGrade(s.id, marks[s.id])} className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold text-xs hover:bg-indigo-700 transition">Save Grade</button>
               </td>
             </tr>
           ))}
@@ -160,101 +136,84 @@ const GradeBookView = ({ studentList, saveGrade }) => {
   );
 };
 
-// --- STEP 2: MAIN DASHBOARD FUNCTION ---
+// --- MAIN DASHBOARD ---
 
 const TeacherDashboard = () => {
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [studentList, setStudentList] = useState([]); 
   const [newStudentName, setNewStudentName] = useState("");
+  const [chartData, setChartData] = useState([]);
   const navigate = useNavigate();
-
-  const chartData = [
-    { name: 'Quiz 1', avg: 85 }, { name: 'Midterm', avg: 78 },
-    { name: 'Quiz 2', avg: 92 }, { name: 'Final', avg: 88 },
-  ];
 
   const fetchStudents = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/users');
-      const data = await response.json();
+      const res = await fetch('http://localhost:8080/api/users');
+      const data = await res.json();
       setStudentList(data);
-    } catch (error) {
-      console.error("Error fetching students:", error);
-    }
+    } catch (e) { console.error(e); }
+  };
+
+  const fetchAnalytics = async () => {
+    try {
+      const res = await fetch('http://localhost:8080/api/grades/analytics/class-average');
+      const data = await res.json();
+      const formatted = Object.keys(data).map(key => ({ name: key, avg: data[key] }));
+      setChartData(formatted);
+    } catch (e) { console.error(e); }
   };
 
   useEffect(() => {
     fetchStudents();
+    fetchAnalytics();
   }, []);
 
   const enrollStudent = async () => {
-    if (!newStudentName.trim()) return alert("Enter student name");
+    if (!newStudentName.trim()) return alert("Enter name");
     try {
-      const response = await fetch('http://localhost:8080/api/users/add', {
+      const res = await fetch('http://localhost:8080/api/users/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newStudentName })
       });
-      if (response.ok) {
-        setNewStudentName("");
-        fetchStudents();
-        alert("Enrolled Successfully!");
-      }
-    } catch (error) {
-      alert("Enrollment failed");
-    }
+      if (res.ok) { setNewStudentName(""); fetchStudents(); alert("Enrolled!"); }
+    } catch (e) { alert("Failed"); }
   };
 
   const removeStudent = async (id) => {
-    if (!window.confirm("Remove student?")) return;
+    if (!window.confirm("Remove?")) return;
     try {
       await fetch(`http://localhost:8080/api/users/delete/${id}`, { method: 'DELETE' });
-      fetchStudents();
-    } catch (error) {
-      alert("Delete failed");
-    }
+      fetchStudents(); fetchAnalytics();
+    } catch (e) { alert("Failed"); }
   };
 
   const markRealTime = async (studentId, status) => {
     try {
-      const response = await fetch('http://localhost:8080/api/attendance/mark', {
+      const res = await fetch('http://localhost:8080/api/attendance/mark', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: studentId, status: status, classId: 101 }),
       });
-      if (response.ok) alert(`Success: ${status} marked!`);
-    } catch (error) {
-      alert("Backend Connection Failed");
-    }
+      if (res.ok) alert(`${status} marked!`);
+    } catch (e) { alert("Failed"); }
   };
 
-  // NEW: Save Grade Logic
   const saveGrade = async (studentId, studentMarks) => {
-    if (!studentMarks) return alert("Please enter marks first!");
-
     const payload = {
-      userId: studentId,
-      classId: 101,
-      quiz: studentMarks.quiz || 0,
-      midterm: studentMarks.midterm || 0,
-      assignment: studentMarks.assignment || 0,
+      userId: studentId, classId: 101,
+      quiz: parseInt(studentMarks?.quiz || 0),
+      midterm: parseInt(studentMarks?.midterm || 0),
+      assignment: parseInt(studentMarks?.assignment || 0),
       role: "TEACHER" 
     };
-
     try {
-      const response = await fetch('http://localhost:8080/api/grades/update', {
+      const res = await fetch('http://localhost:8080/api/grades/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      if (response.ok) {
-        alert("Grade saved to MySQL!");
-      } else {
-        alert("Access Denied or Server Error");
-      }
-    } catch (error) {
-      alert("Backend Connection Failed");
-    }
+      if (res.ok) { alert("Saved!"); fetchAnalytics(); }
+    } catch (e) { alert("Error"); }
   };
 
   return (
@@ -272,9 +231,7 @@ const TeacherDashboard = () => {
               }`}
             > {item} </button>
           ))}
-          <button onClick={() => navigate('/')} className="w-full flex items-center px-4 py-3 rounded-xl text-sm font-bold text-red-400 hover:bg-red-500/10 transition-all mt-auto mb-8">
-            Logout 🚪
-          </button>
+          <button onClick={() => navigate('/')} className="w-full flex items-center px-4 py-3 rounded-xl text-sm font-bold text-red-400 hover:bg-red-500/10 transition-all mt-auto mb-8">Logout 🚪</button>
         </nav>
       </aside>
 
@@ -287,29 +244,9 @@ const TeacherDashboard = () => {
           <div className="w-12 h-12 bg-indigo-100 rounded-full border-2 border-white shadow-md flex items-center justify-center font-bold text-indigo-600">SP</div>
         </header>
 
-        {activeTab === 'Dashboard' && (
-          <DashboardHome 
-            studentList={studentList} 
-            chartData={chartData} 
-            setActiveTab={setActiveTab} 
-          />
-        )}
-        {activeTab === 'Attendance' && (
-          <AttendanceView 
-            studentList={studentList}
-            newStudentName={newStudentName}
-            setNewStudentName={setNewStudentName}
-            enrollStudent={enrollStudent}
-            markRealTime={markRealTime}
-            removeStudent={removeStudent}
-          />
-        )}
-        {activeTab === 'Grade Book' && (
-          <GradeBookView 
-            studentList={studentList} 
-            saveGrade={saveGrade} 
-          />
-        )}
+        {activeTab === 'Dashboard' && <DashboardHome studentList={studentList} chartData={chartData} setActiveTab={setActiveTab} />}
+        {activeTab === 'Attendance' && <AttendanceView studentList={studentList} newStudentName={newStudentName} setNewStudentName={setNewStudentName} enrollStudent={enrollStudent} markRealTime={markRealTime} removeStudent={removeStudent} />}
+        {activeTab === 'Grade Book' && <GradeBookView studentList={studentList} saveGrade={saveGrade} />}
         
         {!['Dashboard', 'Attendance', 'Grade Book'].includes(activeTab) && (
           <div className="bg-white p-20 rounded-[3rem] text-center border border-dashed border-gray-200">

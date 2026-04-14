@@ -15,33 +15,41 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
-    // Verified: Basic GET logic preserved
+    // Verified: Keep existing GET logic
     @GetMapping
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
-    // NEW: Method to Enroll a Student with DB Safety
+    // Updated: Added Try-Catch to reveal exact DB errors in console
     @PostMapping("/add")
     public User addStudent(@RequestBody User user) {
-        // 1. Set role
-        user.setRole("STUDENT");
+        try {
+            // 1. Set default role
+            user.setRole("STUDENT");
 
-        // 2. Fix Email (Constraint Safety)
-        if (user.getEmail() == null || user.getEmail().isEmpty()) {
-            String cleanName = user.getName().toLowerCase().replace(" ", "");
-            user.setEmail(cleanName + "_" + System.currentTimeMillis() + "@edutrack.com");
+            // 2. Generate safe Email if missing
+            if (user.getEmail() == null || user.getEmail().isEmpty()) {
+                String cleanName = (user.getName() != null) ? user.getName().toLowerCase().replace(" ", "") : "student";
+                user.setEmail(cleanName + "_" + System.currentTimeMillis() + "@edutrack.com");
+            }
+
+            // 3. Set default Password
+            if (user.getPassword() == null || user.getPassword().isEmpty()) {
+                user.setPassword("1234");
+            }
+
+            // 4. Save to Database
+            return userRepository.save(user);
+            
+        } catch (Exception e) {
+            // This ensures you see the EXACT SQL error in the Eclipse Console
+            System.err.println("DB ERROR DURING ENROLLMENT: " + e.getMessage());
+            e.printStackTrace();
+            return null; 
         }
-
-        // 3. Fix Password (Constraint Safety)
-        if (user.getPassword() == null || user.getPassword().isEmpty()) {
-            user.setPassword("1234");
-        }
-
-        return userRepository.save(user);
     }
 
-    // NEW: Method to Remove a Student
     @DeleteMapping("/delete/{id}")
     public String deleteStudent(@PathVariable Long id) {
         userRepository.deleteById(id);
