@@ -26,10 +26,10 @@ const DashboardHome = ({ studentList, chartData, setActiveTab }) => (
     <div className="grid grid-cols-3 gap-8 mb-10 text-left">
       <div className="col-span-2 bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
         <h3 className="text-xl font-black mb-6 text-indigo-950">Class Performance (Real-time)</h3>
-        {/* FIXED: Explicit height container to solve width(-1) console error */}
-        <div className="h-[300px] w-full"> 
+        {/* DEFINITIVE FIX for Recharts width(-1) error: Use inline styles for absolute bounds */}
+        <div style={{ width: '100%', height: 300, minHeight: 300 }}> 
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
+            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
               <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontWeight: 700, fontSize: 12}} />
               <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8'}} />
@@ -65,7 +65,7 @@ const AttendanceView = ({ studentList, newStudentName, setNewStudentName, enroll
           onChange={(e) => setNewStudentName(e.target.value)}
           className="px-4 py-2 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-600 w-64 text-black"
         />
-        <button onClick={enrollStudent} className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-indigo-700 transition">+ Enroll</button>
+        <button onClick={enrollStudent} className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-indigo-700 transition cursor-pointer">+ Enroll</button>
       </div>
     </div>
     <table className="w-full text-left">
@@ -126,7 +126,7 @@ const GradeBookView = ({ studentList, saveGrade }) => {
                 <input type="number" placeholder="0" className="w-20 p-2 border rounded-xl outline-none text-center" onChange={(e) => handleInputChange(s.id, 'assignment', e.target.value)} />
               </td>
               <td className="px-8 py-5 text-center">
-                <button onClick={() => saveGrade(s.id, marks[s.id])} className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold text-xs hover:bg-indigo-700 transition">Save Grade</button>
+                <button onClick={() => saveGrade(s.id, marks[s.id])} className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold text-xs hover:bg-indigo-700 transition cursor-pointer">Save Grade</button>
               </td>
             </tr>
           ))}
@@ -143,13 +143,20 @@ const TeacherDashboard = () => {
   const [studentList, setStudentList] = useState([]); 
   const [newStudentName, setNewStudentName] = useState("");
   const [chartData, setChartData] = useState([]);
+  
+  // NEW: State for real-time data
+  const [teacherName, setTeacherName] = useState('Teacher');
+  const [currentDateTime, setCurrentDateTime] = useState('');
+  
   const navigate = useNavigate();
 
   const fetchStudents = async () => {
     try {
       const res = await fetch('http://localhost:8080/api/users');
       const data = await res.json();
-      setStudentList(data);
+      // Filter so Teachers don't show up in the student list!
+      const studentsOnly = data.filter(u => u.role === 'STUDENT');
+      setStudentList(studentsOnly);
     } catch (e) { console.error(e); }
   };
 
@@ -163,8 +170,24 @@ const TeacherDashboard = () => {
   };
 
   useEffect(() => {
+    // 1. Fetch real teacher name from Login
+    const storedName = localStorage.getItem('edutrack_userName');
+    if (storedName) setTeacherName(storedName);
+
+    // 2. Real-Time Clock
+    const updateTime = () => {
+      const now = new Date();
+      const options = { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true };
+      setCurrentDateTime(now.toLocaleString('en-US', options));
+    };
+
+    updateTime(); 
+    const timerId = setInterval(updateTime, 60000); 
+
     fetchStudents();
     fetchAnalytics();
+
+    return () => clearInterval(timerId); // Cleanup clock
   }, []);
 
   const enrollStudent = async () => {
@@ -216,9 +239,14 @@ const TeacherDashboard = () => {
     } catch (e) { alert("Error"); }
   };
 
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate('/login');
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-50 font-sans text-left">
-      <aside className="w-64 bg-indigo-950 text-white flex flex-col fixed h-full">
+      <aside className="w-64 bg-indigo-950 text-white flex flex-col fixed h-full z-10">
         <div className="p-8 flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('Dashboard')}>
           <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center font-black italic">E</div>
           <span className="text-xl font-black tracking-tighter">EduTrack</span>
@@ -226,22 +254,28 @@ const TeacherDashboard = () => {
         <nav className="flex-1 px-4 space-y-2 mt-4 flex flex-col">
           {['Dashboard', 'My Classes', 'Attendance', 'Grade Book', 'Assignments', 'Reports', 'Settings'].map((item) => (
             <button key={item} onClick={() => setActiveTab(item)}
-              className={`w-full flex items-center px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+              className={`w-full flex items-center px-4 py-3 rounded-xl text-sm font-bold transition-all cursor-pointer ${
                 activeTab === item ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/50' : 'text-indigo-300 hover:bg-white/5'
               }`}
             > {item} </button>
           ))}
-          <button onClick={() => navigate('/')} className="w-full flex items-center px-4 py-3 rounded-xl text-sm font-bold text-red-400 hover:bg-red-500/10 transition-all mt-auto mb-8">Logout 🚪</button>
+          <button onClick={handleLogout} className="w-full flex items-center px-4 py-3 rounded-xl text-sm font-bold text-red-400 hover:bg-red-500/10 transition-all mt-auto mb-8 cursor-pointer">Logout 🚪</button>
         </nav>
       </aside>
 
       <main className="flex-1 ml-64 p-10">
         <header className="flex justify-between items-center mb-10">
           <div>
-            <h1 className="text-3xl font-black text-indigo-950">Good morning, Swaroop!</h1>
-            <p className="text-gray-500 font-bold text-sm mt-1">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+            {/* UPDATED: Dynamic Name */}
+            <h1 className="text-3xl font-black text-indigo-950 uppercase tracking-wide">Good morning, {teacherName}!</h1>
+            {/* UPDATED: Dynamic Date & Time */}
+            <p className="text-gray-500 font-bold text-sm mt-1">{currentDateTime}</p>
           </div>
-          <div className="w-12 h-12 bg-indigo-100 rounded-full border-2 border-white shadow-md flex items-center justify-center font-bold text-indigo-600">SP</div>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-gray-200 rounded-full overflow-hidden border-2 border-white shadow-md">
+               <img src={`https://ui-avatars.com/api/?name=${teacherName}&background=e0e7ff&color=4f46e5`} alt="Profile" />
+            </div>
+          </div>
         </header>
 
         {activeTab === 'Dashboard' && <DashboardHome studentList={studentList} chartData={chartData} setActiveTab={setActiveTab} />}

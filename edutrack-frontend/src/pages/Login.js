@@ -1,70 +1,153 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Login = () => {
+  const [role, setRole] = useState('Student');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false); 
   const navigate = useNavigate();
 
-  // Function to handle the login button click
-  const handleLogin = (e) => {
-    e.preventDefault(); // Prevents the page from refreshing
+  const handleLogin = async (e) => {
+    e.preventDefault(); 
     
-    // Logic: In a real app, we would validate credentials here.
-    // For now, we redirect directly to the Teacher Dashboard.
-    navigate('/teacher');
+    const payload = {
+      email: email,
+      password: password,
+      role: role.toUpperCase()
+    };
+
+    try {
+      const response = await fetch('http://localhost:8080/api/users/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        const userData = await response.json();
+        
+        // Save the authenticated user details to the browser
+        localStorage.setItem('edutrack_userId', userData.id);
+        localStorage.setItem('edutrack_userName', userData.name);
+
+        if (role === 'Teacher' || role === 'Admin') {
+          navigate('/teacher');
+        } else {
+          navigate('/student');
+        }
+      } else {
+        alert("Invalid Email, Password, or Role.");
+      }
+    } catch (error) {
+      alert("Cannot connect to server. Is Spring Boot running?");
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-      <div className="max-w-md w-full bg-white rounded-[2.5rem] shadow-2xl p-12 border border-gray-100">
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-2xl mb-4 shadow-lg shadow-indigo-200">
-            <svg viewBox="0 0 24 24" className="w-8 h-8 text-white" fill="currentColor">
-              <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z" />
-            </svg>
+    <div className="flex min-h-screen font-sans text-left">
+      <div className="hidden lg:flex flex-col justify-between w-1/2 bg-gradient-to-br from-[#4f46e5] to-[#312e81] text-white p-16">
+        <div>
+          <div className="flex items-center gap-3 mb-16 cursor-pointer" onClick={() => navigate('/')}>
+            <div className="w-8 h-8 bg-white text-indigo-700 rounded-lg flex items-center justify-center font-black">E</div>
+            <span className="text-xl font-black tracking-tighter">EduTrack</span>
           </div>
-          <h2 className="text-3xl font-black text-indigo-950">Welcome Back</h2>
-          <p className="text-gray-500 font-medium mt-2">Sign in to your SPED Portal</p>
+          <h1 className="text-4xl font-black mb-6 leading-tight">Manage your educational<br/>ecosystem with<br/>confidence.</h1>
+          <p className="text-indigo-200 mb-10 text-sm w-3/4">The platform for modern schools. Everything you need in one centralized workspace.</p>
+          
+          <ul className="space-y-4 text-sm font-bold text-indigo-100">
+            <li className="flex items-center gap-3"><span className="text-indigo-400">✔</span> Intuitive grade management</li>
+            <li className="flex items-center gap-3"><span className="text-indigo-400">✔</span> Real-time attendance tracking</li>
+            <li className="flex items-center gap-3"><span className="text-indigo-400">✔</span> Smart communication tools</li>
+            <li className="flex items-center gap-3"><span className="text-indigo-400">✔</span> Comprehensive analytics</li>
+          </ul>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-6">
+        <div className="flex gap-16 border-t border-indigo-500/30 pt-8">
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Email Address</label>
-            <input 
-              required
-              type="email" 
-              className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 outline-none transition-all font-medium"
-              placeholder="name@school.edu"
-            />
+            <h4 className="text-2xl font-black">1,240</h4>
+            <p className="text-[10px] uppercase tracking-widest text-indigo-300 font-bold">Active Students</p>
           </div>
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Password</label>
-            <input 
-              required
-              type="password" 
-              className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 outline-none transition-all font-medium"
-              placeholder="••••••••"
-            />
+            <h4 className="text-2xl font-black">68</h4>
+            <p className="text-[10px] uppercase tracking-widest text-indigo-300 font-bold">Teachers</p>
           </div>
-          
-          <div className="flex items-center justify-between text-sm">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
-              <span className="text-gray-600 font-bold">Remember me</span>
-            </label>
-            <span className="text-indigo-600 font-bold cursor-pointer hover:underline">Forgot Password?</span>
+          <div>
+            <h4 className="text-2xl font-black">98%</h4>
+            <p className="text-[10px] uppercase tracking-widest text-indigo-300 font-bold">Satisfaction</p>
           </div>
+        </div>
+      </div>
 
-          <button 
-            type="submit"
-            className="w-full bg-indigo-600 text-white py-4 rounded-xl font-black text-lg shadow-xl shadow-indigo-100 hover:bg-indigo-700 hover:scale-[1.02] transition-all cursor-pointer"
-          >
-            Sign In
-          </button>
-        </form>
+      <div className="w-full lg:w-1/2 flex items-center justify-center bg-white p-8">
+        <div className="w-full max-w-md">
+          <h2 className="text-3xl font-black text-indigo-950 mb-2">Welcome back</h2>
+          <p className="text-sm text-gray-500 font-medium mb-8">Select your role and sign in to continue.</p>
 
-        <div className="mt-8 text-center">
-          <p className="text-gray-500 text-sm font-medium">
-            Don't have an account? <span className="text-indigo-600 font-bold cursor-pointer hover:underline">Contact Administrator</span>
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div className="flex p-1 bg-gray-50 rounded-xl border border-gray-100">
+              {['Admin', 'Teacher', 'Student'].map((r) => (
+                <button
+                  key={r} type="button"
+                  onClick={() => setRole(r)}
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${role === r ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex justify-between items-center bg-indigo-50/50 p-3 rounded-lg border border-indigo-100 border-dashed">
+               <span className="text-xs font-bold text-indigo-400">Demo: student@edutrack.com</span>
+               <button type="button" onClick={() => setEmail('student@edutrack.com')} className="text-xs font-bold text-indigo-600 hover:text-indigo-800 cursor-pointer">Fill →</button>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Email address</label>
+              <div className="relative">
+                <span className="absolute left-4 top-3 text-gray-300">✉</span>
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter your email" required
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all" />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Password</label>
+              <div className="relative">
+                <span className="absolute left-4 top-3 text-gray-300">🔒</span>
+                <input 
+                  type={showPassword ? "text" : "password"} 
+                  value={password} 
+                  onChange={(e) => setPassword(e.target.value)} 
+                  placeholder="••••••••" 
+                  required
+                  className="w-full pl-10 pr-16 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all" 
+                />
+                <button 
+                  type="button" 
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-3 text-xs font-bold text-indigo-600 cursor-pointer hover:text-indigo-800"
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600" />
+                <span className="text-xs font-bold text-gray-500">Remember me</span>
+              </label>
+              <span className="text-xs font-bold text-indigo-600 hover:text-indigo-800 cursor-pointer">Forgot password?</span>
+            </div>
+
+            <button type="submit" className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-all flex justify-center items-center gap-2 cursor-pointer">
+              Sign in <span className="text-lg leading-none">›</span>
+            </button>
+          </form>
+
+          <p className="text-center text-xs font-bold text-gray-500 mt-8">
+            Don't have an account? <Link to="/register" className="text-indigo-600 hover:text-indigo-800 font-black">Sign up</Link>
           </p>
         </div>
       </div>

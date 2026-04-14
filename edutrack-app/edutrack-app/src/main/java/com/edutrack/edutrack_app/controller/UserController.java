@@ -3,9 +3,11 @@ package com.edutrack.edutrack_app.controller;
 import com.edutrack.edutrack_app.model.User;
 import com.edutrack.edutrack_app.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
@@ -15,39 +17,52 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
-    // Verified: Keep existing GET logic
     @GetMapping
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
-    // Updated: Added Try-Catch to reveal exact DB errors in console
+    // REGISTRATION API
     @PostMapping("/add")
-    public User addStudent(@RequestBody User user) {
+    public ResponseEntity<?> addStudent(@RequestBody User user) {
         try {
-            // 1. Set default role
-            user.setRole("STUDENT");
-
-            // 2. Generate safe Email if missing
-            if (user.getEmail() == null || user.getEmail().isEmpty()) {
-                String cleanName = (user.getName() != null) ? user.getName().toLowerCase().replace(" ", "") : "student";
-                user.setEmail(cleanName + "_" + System.currentTimeMillis() + "@edutrack.com");
+            // Check if email already exists to prevent duplicates
+            Optional<User> existingUser = userRepository.findByEmail(user.getEmail());
+            if (existingUser.isPresent()) {
+                return ResponseEntity.badRequest().body("Email already registered!");
             }
 
-            // 3. Set default Password
-            if (user.getPassword() == null || user.getPassword().isEmpty()) {
-                user.setPassword("1234");
+            // Ensure role is formatted correctly
+            if (user.getRole() == null || user.getRole().isEmpty()) {
+                user.setRole("STUDENT");
+            } else {
+                user.setRole(user.getRole().toUpperCase());
             }
 
-            // 4. Save to Database
-            return userRepository.save(user);
+            User savedUser = userRepository.save(user);
+            return ResponseEntity.ok(savedUser);
             
         } catch (Exception e) {
-            // This ensures you see the EXACT SQL error in the Eclipse Console
-            System.err.println("DB ERROR DURING ENROLLMENT: " + e.getMessage());
+            System.err.println("DB ERROR: " + e.getMessage());
             e.printStackTrace();
-            return null; 
+            return ResponseEntity.internalServerError().body("Database Error: " + e.getMessage());
         }
+    }
+
+    // LOGIN API
+    @PostMapping("/login")
+    public ResponseEntity<?> loginUser(@RequestBody User loginData) {
+        Optional<User> userOpt = userRepository.findByEmail(loginData.getEmail());
+        
+        if (userOpt.isPresent()) {
+            User dbUser = userOpt.get();
+            // Verify Password and Role
+            if (dbUser.getPassword().equals(loginData.getPassword()) && 
+                dbUser.getRole().equalsIgnoreCase(loginData.getRole())) {
+                return ResponseEntity.ok(dbUser); // Login Success
+            }
+        }
+        return ResponseEntity.status(401).body("Invalid credentials or role mismatch.");
     }
 
     @DeleteMapping("/delete/{id}")
