@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import TeacherDashboard from './pages/TeacherDashboard';
 import StudentDashboard from './pages/StudentDashboard'; 
+import AdminDashboard from './pages/AdminDashboard'; // <-- NEW: Imported Admin
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         {/* Protected Dashboard Routes */}
         <Route path="/teacher" element={<TeacherDashboard />} />
         <Route path="/student" element={<StudentDashboard />} />
+        <Route path="/admin" element={<AdminDashboard />} /> {/* <-- NEW: Admin Route */}
       </Routes>
     </Router>
   );

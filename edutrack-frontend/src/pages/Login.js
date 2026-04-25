@@ -31,7 +31,10 @@ const Login = () => {
         localStorage.setItem('edutrack_userId', userData.id);
         localStorage.setItem('edutrack_userName', userData.name);
 
-        if (role === 'Teacher' || role === 'Admin') {
+        // --- NEW: Accurate Routing Logic ---
+        if (role === 'Admin') {
+          navigate('/admin');
+        } else if (role === 'Teacher') {
           navigate('/teacher');
         } else {
           navigate('/student');

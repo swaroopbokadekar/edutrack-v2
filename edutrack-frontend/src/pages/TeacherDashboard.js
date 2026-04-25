@@ -26,7 +26,6 @@ const DashboardHome = ({ studentList, chartData, setActiveTab }) => (
     <div className="grid grid-cols-3 gap-8 mb-10 text-left">
       <div className="col-span-2 bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
         <h3 className="text-xl font-black mb-6 text-indigo-950">Class Performance (Real-time)</h3>
-        {/* DEFINITIVE FIX for Recharts width(-1) error: Use inline styles for absolute bounds */}
         <div style={{ width: '100%', height: 300, minHeight: 300 }}> 
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
@@ -51,6 +50,39 @@ const DashboardHome = ({ studentList, chartData, setActiveTab }) => (
       </div>
     </div>
   </>
+);
+
+// --- NEW: My Classes Component ---
+const MyClassesView = ({ myCourses }) => (
+  <div className="text-left">
+    <h3 className="text-2xl font-black text-indigo-950 mb-6">My Assigned Classes</h3>
+    
+    {myCourses.length === 0 ? (
+      <div className="bg-white p-12 rounded-3xl border border-gray-100 text-center shadow-sm">
+        <span className="text-4xl block mb-4">📭</span>
+        <h4 className="text-lg font-bold text-gray-500">No classes assigned yet.</h4>
+        <p className="text-sm text-gray-400">Contact your administrator to be assigned to a course.</p>
+      </div>
+    ) : (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {myCourses.map(course => (
+          <div key={course.id} className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 border-t-8 border-t-indigo-500 hover:shadow-md transition-shadow">
+            <div className="flex justify-between items-start mb-4">
+               <div>
+                 <span className="text-[10px] font-black tracking-widest text-indigo-400 uppercase">{course.gradeLevel}</span>
+                 <h4 className="text-xl font-black text-indigo-950 mt-1">{course.courseName}</h4>
+               </div>
+               <span className="text-2xl">📚</span>
+            </div>
+            <div className="bg-indigo-50 p-4 rounded-xl mt-6 flex justify-between items-center">
+              <span className="text-xs font-bold text-indigo-600">Enrolled Students:</span>
+              <span className="text-lg font-black text-indigo-900">{course.enrolledStudents || 0}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
 );
 
 const AttendanceView = ({ studentList, newStudentName, setNewStudentName, enrollStudent, markRealTime, removeStudent }) => (
@@ -144,9 +176,9 @@ const TeacherDashboard = () => {
   const [newStudentName, setNewStudentName] = useState("");
   const [chartData, setChartData] = useState([]);
   
-  // NEW: State for real-time data
   const [teacherName, setTeacherName] = useState('Teacher');
   const [currentDateTime, setCurrentDateTime] = useState('');
+  const [myCourses, setMyCourses] = useState([]); // NEW: State for courses
   
   const navigate = useNavigate();
 
@@ -154,7 +186,6 @@ const TeacherDashboard = () => {
     try {
       const res = await fetch('http://localhost:8080/api/users');
       const data = await res.json();
-      // Filter so Teachers don't show up in the student list!
       const studentsOnly = data.filter(u => u.role === 'STUDENT');
       setStudentList(studentsOnly);
     } catch (e) { console.error(e); }
@@ -170,9 +201,17 @@ const TeacherDashboard = () => {
   };
 
   useEffect(() => {
-    // 1. Fetch real teacher name from Login
+    // 1. Fetch real teacher name and their assigned courses
     const storedName = localStorage.getItem('edutrack_userName');
-    if (storedName) setTeacherName(storedName);
+    if (storedName) {
+      setTeacherName(storedName);
+      
+      // Fetch courses specifically for this teacher
+      fetch(`http://localhost:8080/api/courses/teacher/${storedName}`)
+        .then(res => res.json())
+        .then(data => setMyCourses(data))
+        .catch(err => console.error("Error fetching my courses:", err));
+    }
 
     // 2. Real-Time Clock
     const updateTime = () => {
@@ -266,9 +305,7 @@ const TeacherDashboard = () => {
       <main className="flex-1 ml-64 p-10">
         <header className="flex justify-between items-center mb-10">
           <div>
-            {/* UPDATED: Dynamic Name */}
             <h1 className="text-3xl font-black text-indigo-950 uppercase tracking-wide">Good morning, {teacherName}!</h1>
-            {/* UPDATED: Dynamic Date & Time */}
             <p className="text-gray-500 font-bold text-sm mt-1">{currentDateTime}</p>
           </div>
           <div className="flex items-center gap-4">
@@ -279,10 +316,15 @@ const TeacherDashboard = () => {
         </header>
 
         {activeTab === 'Dashboard' && <DashboardHome studentList={studentList} chartData={chartData} setActiveTab={setActiveTab} />}
+        
+        {/* NEW: Render My Classes View */}
+        {activeTab === 'My Classes' && <MyClassesView myCourses={myCourses} />}
+        
         {activeTab === 'Attendance' && <AttendanceView studentList={studentList} newStudentName={newStudentName} setNewStudentName={setNewStudentName} enrollStudent={enrollStudent} markRealTime={markRealTime} removeStudent={removeStudent} />}
         {activeTab === 'Grade Book' && <GradeBookView studentList={studentList} saveGrade={saveGrade} />}
         
-        {!['Dashboard', 'Attendance', 'Grade Book'].includes(activeTab) && (
+        {/* UPDATED: Do not show 'Coming Soon' if tab is My Classes */}
+        {!['Dashboard', 'My Classes', 'Attendance', 'Grade Book'].includes(activeTab) && (
           <div className="bg-white p-20 rounded-[3rem] text-center border border-dashed border-gray-200">
             <h2 className="text-2xl font-black text-gray-300 uppercase tracking-widest">{activeTab} Coming Soon</h2>
             <p className="text-gray-400 mt-2">Linking to edutrack_db...</p>
