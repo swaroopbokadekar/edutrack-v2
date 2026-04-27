@@ -2,17 +2,101 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
+// --- SUB-COMPONENTS ---
+
+const StudentsView = ({ students }) => (
+  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="p-6 border-b border-gray-50 flex justify-between items-center">
+      <h3 className="text-lg font-black text-indigo-950">Registered Students Directory</h3>
+      <span className="px-4 py-1 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold">{students.length} Total</span>
+    </div>
+    <table className="w-full text-left">
+      <thead className="bg-gray-50 text-gray-400 text-[10px] uppercase font-bold tracking-widest">
+        <tr>
+          <th className="px-8 py-4">System ID</th>
+          <th className="px-8 py-4">Student Name</th>
+          <th className="px-8 py-4">Email Address</th>
+          <th className="px-8 py-4">Status</th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-gray-50">
+        {students.length === 0 ? <tr><td colSpan="4" className="text-center p-8 text-gray-400">No students registered yet.</td></tr> : null}
+        {students.map((student) => (
+          <tr key={student.id} className="hover:bg-gray-50 transition">
+            <td className="px-8 py-4 font-bold text-gray-400">#EDU-{student.id}</td>
+            <td className="px-8 py-4 font-bold text-indigo-950 flex items-center gap-3">
+               <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 border border-gray-200">
+                  <img src={`https://ui-avatars.com/api/?name=${student.name}&background=f8fafc&color=4f46e5`} alt="avatar" />
+               </div>
+               {student.name}
+            </td>
+            <td className="px-8 py-4 text-sm text-gray-500">{student.email}</td>
+            <td className="px-8 py-4"><span className="px-3 py-1 bg-green-50 text-green-600 rounded-full text-[10px] font-bold uppercase tracking-widest">Active</span></td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
+
+const TeachersView = ({ teachers, courses }) => (
+  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="p-6 border-b border-gray-50 flex justify-between items-center">
+      <h3 className="text-lg font-black text-indigo-950">Faculty Directory</h3>
+      <span className="px-4 py-1 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold">{teachers.length} Total</span>
+    </div>
+    <table className="w-full text-left">
+      <thead className="bg-gray-50 text-gray-400 text-[10px] uppercase font-bold tracking-widest">
+        <tr>
+          <th className="px-8 py-4">System ID</th>
+          <th className="px-8 py-4">Teacher Name</th>
+          <th className="px-8 py-4">Email Address</th>
+          <th className="px-8 py-4">Assigned Courses</th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-gray-50">
+        {teachers.length === 0 ? <tr><td colSpan="4" className="text-center p-8 text-gray-400">No teachers registered yet.</td></tr> : null}
+        {teachers.map((teacher) => {
+          // Calculate how many courses this specific teacher is assigned to
+          const assignedCount = courses.filter(c => c.teacherName === teacher.name).length;
+          
+          return (
+            <tr key={teacher.id} className="hover:bg-gray-50 transition">
+              <td className="px-8 py-4 font-bold text-gray-400">#FAC-{teacher.id}</td>
+              <td className="px-8 py-4 font-bold text-indigo-950 flex items-center gap-3">
+                 <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 border border-gray-200">
+                    <img src={`https://ui-avatars.com/api/?name=${teacher.name}&background=e0e7ff&color=4f46e5`} alt="avatar" />
+                 </div>
+                 {teacher.name}
+              </td>
+              <td className="px-8 py-4 text-sm text-gray-500">{teacher.email}</td>
+              <td className="px-8 py-4">
+                 {assignedCount > 0 ? (
+                    <span className="px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-xs font-bold">{assignedCount} Classes</span>
+                 ) : (
+                    <span className="px-3 py-1 bg-gray-50 text-gray-400 rounded-full text-xs font-bold">Unassigned</span>
+                 )}
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </div>
+);
+
+// --- MAIN DASHBOARD ---
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [adminName, setAdminName] = useState('Admin');
-  const [activeTab, setActiveTab] = useState('Dashboard'); // NEW: Tab State
+  const [activeTab, setActiveTab] = useState('Dashboard');
   
   // Real-time Data States
   const [students, setStudents] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [courses, setCourses] = useState([]);
 
-  // New Course Form State
   const [newCourse, setNewCourse] = useState({ courseName: '', teacherName: '', gradeLevel: 'Grade 10' });
 
   useEffect(() => {
@@ -23,7 +107,6 @@ const AdminDashboard = () => {
 
   const fetchAllData = async () => {
     try {
-      // Fetch Users (Students and Teachers)
       const userRes = await fetch('http://localhost:8080/api/users');
       const users = await userRes.json();
       
@@ -33,7 +116,6 @@ const AdminDashboard = () => {
       setStudents(realStudents);
       setTeachers(realTeachers);
 
-      // Fetch Courses
       const courseRes = await fetch('http://localhost:8080/api/courses');
       const courseData = await courseRes.json();
       setCourses(courseData);
@@ -56,7 +138,7 @@ const AdminDashboard = () => {
       if (response.ok) {
         alert("Course added successfully!");
         setNewCourse({ courseName: '', teacherName: '', gradeLevel: 'Grade 10' });
-        fetchAllData(); // Refresh the table
+        fetchAllData(); 
       }
     } catch (err) { alert("Failed to add course."); }
   };
@@ -135,10 +217,8 @@ const AdminDashboard = () => {
           </div>
         </header>
 
-        {/* --- TAB VIEW: DASHBOARD --- */}
         {activeTab === 'Dashboard' && (
           <>
-            {/* KPI CARDS - NOW DYNAMIC! */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-indigo-600">
                   <p className="text-gray-500 text-sm font-bold mb-1">Total Students</p>
@@ -158,7 +238,6 @@ const AdminDashboard = () => {
                </div>
             </div>
 
-            {/* CHARTS */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
                <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                   <h3 className="text-lg font-black text-indigo-950 mb-6">Student Enrollment Trend</h3>
@@ -190,11 +269,12 @@ const AdminDashboard = () => {
           </>
         )}
 
-        {/* --- TAB VIEW: COURSES MANAGEMENT --- */}
+        {/* --- DYNAMIC VIEWS --- */}
+        {activeTab === 'Students' && <StudentsView students={students} />}
+        {activeTab === 'Teachers' && <TeachersView teachers={teachers} courses={courses} />}
+        
         {activeTab === 'Courses' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            {/* Create Course Form */}
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
               <h3 className="text-lg font-black text-indigo-950 mb-6">Create New Course</h3>
               <form onSubmit={handleAddCourse} className="space-y-4">
@@ -222,7 +302,6 @@ const AdminDashboard = () => {
               </form>
             </div>
 
-            {/* Course List Table */}
             <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="p-6 border-b border-gray-50">
                 <h3 className="text-lg font-black text-indigo-950">Active Directory</h3>
@@ -251,12 +330,11 @@ const AdminDashboard = () => {
                 </tbody>
               </table>
             </div>
-
           </div>
         )}
 
-        {/* --- PLACEHOLDER FOR OTHER TABS --- */}
-        {!['Dashboard', 'Courses'].includes(activeTab) && (
+        {/* --- PLACEHOLDER FOR REMAINING TABS --- */}
+        {!['Dashboard', 'Students', 'Teachers', 'Courses'].includes(activeTab) && (
           <div className="bg-white p-20 rounded-2xl text-center border border-dashed border-gray-200">
             <h2 className="text-2xl font-black text-gray-300 uppercase tracking-widest">{activeTab} Coming Soon</h2>
             <p className="text-gray-400 mt-2">Module currently under construction.</p>

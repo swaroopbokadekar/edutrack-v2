@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell, ReferenceLine } from 'recharts';
 
-// --- Helper Component for the Circular Progress Rings ---
+// --- Helper Functions & Components ---
 const CircularProgress = ({ value, color, max = 100 }) => {
   const radius = 18;
   const circumference = 2 * Math.PI * radius;
@@ -18,7 +18,20 @@ const CircularProgress = ({ value, color, max = 100 }) => {
   );
 };
 
-// --- Course Catalog View ---
+const getBorderColor = (type) => {
+  if (type === 'QUIZ') return 'border-indigo-500';
+  if (type === 'ASSIGNMENT') return 'border-teal-500';
+  return 'border-rose-500';
+};
+
+const getTextColor = (type) => {
+  if (type === 'QUIZ') return 'text-indigo-400 border-indigo-100';
+  if (type === 'ASSIGNMENT') return 'text-teal-500 border-teal-100';
+  return 'text-rose-400 border-rose-100';
+};
+
+// --- SUB-COMPONENTS ---
+
 const CourseCatalogView = ({ allCourses, myEnrollments, handleJoinCourse }) => {
   return (
     <div className="text-left">
@@ -55,6 +68,95 @@ const CourseCatalogView = ({ allCourses, myEnrollments, handleJoinCourse }) => {
   );
 };
 
+// NEW: Academic Transcript View
+const GradesView = ({ courses }) => (
+  <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden text-left p-8">
+    <div className="flex justify-between items-center mb-6">
+      <h3 className="text-2xl font-black text-indigo-950">Academic Transcript</h3>
+      <span className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold">Semester 1</span>
+    </div>
+    <table className="w-full text-left mt-4">
+      <thead className="bg-gray-50 text-gray-400 text-[10px] font-black uppercase tracking-widest">
+        <tr>
+          <th className="px-8 py-4">Subject</th>
+          <th className="px-8 py-4 text-center">Quiz Avg</th>
+          <th className="px-8 py-4 text-center">Midterm</th>
+          <th className="px-8 py-4 text-center">Assignments</th>
+          <th className="px-8 py-4 text-center">Overall Score</th>
+          <th className="px-8 py-4 text-center">Final Grade</th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-gray-50">
+        {courses.map((c, i) => (
+          <tr key={i} className="hover:bg-gray-50 transition">
+            <td className="px-8 py-5">
+              <p className="font-bold text-indigo-950">{c.subject}</p>
+              <p className="text-[10px] text-gray-500">{c.teacher}</p>
+            </td>
+            {/* Displaying the same score for mock purposes, but this simulates the detailed breakdown */}
+            <td className="px-8 py-5 text-center font-bold text-gray-500">{c.score > 0 ? c.score : '-'}</td>
+            <td className="px-8 py-5 text-center font-bold text-gray-500">{c.score > 0 ? c.score : '-'}</td>
+            <td className="px-8 py-5 text-center font-bold text-gray-500">{c.score > 0 ? c.score : '-'}</td>
+            <td className="px-8 py-5 text-center font-black text-indigo-600">{c.score}%</td>
+            <td className="px-8 py-5 text-center">
+              <span className={`w-8 py-1 inline-block rounded text-center text-xs font-bold ${c.bg} ${c.hex}`}>{c.grade}</span>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
+
+// NEW: Timeline Schedule View
+const CalendarView = ({ myAssignments }) => (
+  <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100 text-left max-w-3xl">
+    <h3 className="text-2xl font-black text-indigo-950 mb-2">Schedule & Deadlines</h3>
+    <p className="text-gray-500 mb-8">Stay on top of your upcoming tasks across all enrolled courses.</p>
+    
+    {myAssignments.length === 0 ? (
+      <div className="p-12 text-center text-gray-400 border-2 border-dashed border-gray-100 rounded-3xl">
+        <span className="text-4xl block mb-4">🎉</span>
+        <p className="font-bold">No upcoming deadlines!</p>
+        <p className="text-xs mt-1">Enjoy your free time.</p>
+      </div>
+    ) : (
+      <div className="relative border-l-2 border-indigo-100 ml-4 space-y-8 py-4">
+        {myAssignments.map((task, i) => {
+          // Determine dot color
+          let dotColor = 'bg-indigo-500';
+          if (task.type === 'ASSIGNMENT') dotColor = 'bg-teal-500';
+          if (task.type === 'PROJECT') dotColor = 'bg-rose-500';
+
+          return (
+            <div key={i} className="relative pl-8">
+              {/* Timeline Dot */}
+              <div className={`absolute -left-[9px] top-4 w-4 h-4 rounded-full border-4 border-white ${dotColor} shadow-sm`}></div>
+              
+              {/* Task Card */}
+              <div className={`p-6 rounded-2xl border border-gray-100 shadow-sm border-l-4 ${getBorderColor(task.type)} bg-gray-50/30 hover:bg-white transition`}>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <span className={`text-[10px] font-black border px-2 py-1 rounded uppercase tracking-widest ${getTextColor(task.type)}`}>{task.type}</span>
+                    <h4 className="font-bold text-gray-800 text-lg mt-3">{task.title}</h4>
+                    <p className="text-xs font-bold text-gray-500 mt-1">{task.courseName}</p>
+                  </div>
+                  <div className="text-right bg-white p-3 rounded-xl shadow-sm border border-gray-50">
+                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Due Date</p>
+                    <p className="font-black text-rose-500 text-sm">{task.dueDate}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    )}
+  </div>
+);
+
+// --- MAIN DASHBOARD ---
+
 const StudentDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('Dashboard');
@@ -62,12 +164,10 @@ const StudentDashboard = () => {
   const [studentName, setStudentName] = useState('Student');
   const [currentDateTime, setCurrentDateTime] = useState('');
   
-  // Real-time Data States
   const [allCourses, setAllCourses] = useState([]);
   const [myEnrollments, setMyEnrollments] = useState([]);
-  const [myAssignments, setMyAssignments] = useState([]); // NEW: State for Deadlines
+  const [myAssignments, setMyAssignments] = useState([]); 
   
-  // Widget Data
   const [courses, setCourses] = useState([
     { subject: 'Mathematics', teacher: 'Mr. Kumar', score: 0, grade: 'N/A', color: '#4f46e5', hex: 'text-indigo-600', bg: 'bg-indigo-50' },
     { subject: 'Science', teacher: 'Ms. Park', score: 0, grade: 'N/A', color: '#0ea5e9', hex: 'text-sky-600', bg: 'bg-sky-50' },
@@ -87,19 +187,15 @@ const StudentDashboard = () => {
 
   const fetchData = async (id) => {
     try {
-      // 1. Fetch available courses
       const courseRes = await fetch('http://localhost:8080/api/courses');
       if (courseRes.ok) setAllCourses(await courseRes.json());
 
-      // 2. Fetch my enrollments
       const enrollRes = await fetch(`http://localhost:8080/api/enrollments/student/${id}`);
       if (enrollRes.ok) setMyEnrollments(await enrollRes.json());
 
-      // 3. Fetch REAL assignments from backend!
       const assignRes = await fetch(`http://localhost:8080/api/assignments/student/${id}`);
       if (assignRes.ok) setMyAssignments(await assignRes.json());
 
-      // 4. Fetch grades
       const gradeRes = await fetch(`http://localhost:8080/api/grades/${id}`);
       if (gradeRes.ok) {
         const gradeData = await gradeRes.json();
@@ -164,18 +260,6 @@ const StudentDashboard = () => {
     navigate('/login');
   };
 
-  // Helper for dynamic assignment colors
-  const getBorderColor = (type) => {
-    if (type === 'QUIZ') return 'border-indigo-500';
-    if (type === 'ASSIGNMENT') return 'border-teal-500';
-    return 'border-rose-500';
-  };
-  const getTextColor = (type) => {
-    if (type === 'QUIZ') return 'text-indigo-400 border-indigo-100';
-    if (type === 'ASSIGNMENT') return 'text-teal-500 border-teal-100';
-    return 'text-rose-400 border-rose-100';
-  };
-
   const attendanceData = [
     { name: 'Jan', val: 92 }, { name: 'Feb', val: 89 }, { name: 'Mar', val: 85 }, 
     { name: 'Apr', val: 87 }, { name: 'May', val: 84 }, { name: 'Jun', val: 87 }
@@ -184,7 +268,6 @@ const StudentDashboard = () => {
   return (
     <div className="flex min-h-screen bg-[#f8fafc] font-sans text-left">
       
-      {/* Sidebar */}
       <aside className="w-64 bg-[#2e268a] text-white hidden xl:flex flex-col fixed h-full z-10">
         <div className="p-6 flex items-center gap-3 border-b border-white/10">
           <div className="w-8 h-8 bg-white/20 rounded flex items-center justify-center font-black">E</div>
@@ -204,10 +287,8 @@ const StudentDashboard = () => {
         </button>
       </aside>
 
-      {/* Main Content Area */}
       <main className="flex-1 xl:ml-64 px-8 pt-6 pb-12">
         
-        {/* Top Navbar */}
         <header className="flex justify-between items-center mb-8 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-800">Good morning, {studentName}!</h1>
@@ -223,7 +304,6 @@ const StudentDashboard = () => {
 
         {activeTab === 'Dashboard' && (
           <>
-            {/* 1. TOP STATS ROW */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
               <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
                 <div>
@@ -259,9 +339,7 @@ const StudentDashboard = () => {
               </div>
             </div>
 
-            {/* 2. MIDDLE ROW: Courses & Deadlines */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                  <h3 className="text-sm font-bold text-gray-800 mb-6">My Courses</h3>
                  <div className="space-y-5">
@@ -287,10 +365,9 @@ const StudentDashboard = () => {
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-left">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-sm font-bold text-gray-800">Upcoming Deadlines</h3>
-                  <span className="text-indigo-600 text-xs font-bold cursor-pointer hover:underline">View Calendar</span>
+                  <span onClick={() => setActiveTab('Calendar')} className="text-indigo-600 text-xs font-bold cursor-pointer hover:underline">View Calendar</span>
                 </div>
                 
-                {/* DYNAMIC ASSIGNMENTS RENDERED HERE */}
                 <div className="space-y-3">
                    {myAssignments.length === 0 ? (
                      <p className="text-gray-400 text-xs text-center py-4">No upcoming deadlines.</p>
@@ -309,9 +386,7 @@ const StudentDashboard = () => {
               </div>
             </div>
 
-            {/* 3. CHARTS ROW */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                   <h3 className="text-sm font-bold text-gray-800 mb-6">Attendance Trend</h3>
                   <div className="h-48">
@@ -345,62 +420,23 @@ const StudentDashboard = () => {
                   </div>
                 </div>
             </div>
-
-            {/* 4. ACHIEVEMENTS & ALERTS ROW */}
-            <h3 className="text-sm font-bold text-gray-800 mb-4">Achievements & Badges</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-               <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-100 text-center shadow-sm">
-                  <span className="text-2xl">⭐</span>
-                  <p className="text-xs font-bold text-gray-800 mt-2">Perfect Attendance</p>
-                  <p className="text-[10px] text-gray-500">March 2026</p>
-               </div>
-               <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 text-center shadow-sm">
-                  <span className="text-2xl">🏆</span>
-                  <p className="text-xs font-bold text-gray-800 mt-2">Top Scorer</p>
-                  <p className="text-[10px] text-gray-500">Science Quiz</p>
-               </div>
-               <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100 text-center shadow-sm">
-                  <span className="text-2xl">📈</span>
-                  <p className="text-xs font-bold text-gray-800 mt-2">Improvement Champ</p>
-                  <p className="text-[10px] text-gray-500">+15% overall</p>
-               </div>
-               <div className="bg-sky-50/50 p-4 rounded-xl border border-sky-100 text-center shadow-sm">
-                  <span className="text-2xl">✅</span>
-                  <p className="text-xs font-bold text-gray-800 mt-2">Assignment Master</p>
-                  <p className="text-[10px] text-gray-500">20 on-time</p>
-               </div>
-            </div>
-
-            <h3 className="text-sm font-bold text-gray-800 mb-4">Recent Alerts</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               <div className="bg-blue-50/30 p-4 rounded-xl border border-blue-100 flex items-start gap-3 shadow-sm">
-                  <span className="text-blue-500 mt-0.5">ℹ️</span>
-                  <div>
-                    <p className="text-sm font-bold text-blue-900">Attendance OK</p>
-                    <p className="text-[10px] text-blue-600 mt-1">Your 87% is above the 75% minimum requirement. Keep it up!</p>
-                  </div>
-               </div>
-               <div className="bg-green-50/30 p-4 rounded-xl border border-green-100 flex items-start gap-3 shadow-sm">
-                  <span className="text-green-500 mt-0.5">✅</span>
-                  <div>
-                    <p className="text-sm font-bold text-green-900">Grade Improved</p>
-                    <p className="text-[10px] text-green-600 mt-1">Your Math score improved from 68% to {courses[0].score}% this semester.</p>
-                  </div>
-               </div>
-            </div>
           </>
         )}
 
-        {/* --- Course Catalog Tab --- */}
+        {/* --- DYNAMIC VIEWS --- */}
         {activeTab === 'My Courses' && (
-           <CourseCatalogView 
-              allCourses={allCourses} 
-              myEnrollments={myEnrollments} 
-              handleJoinCourse={handleJoinCourse} 
-           />
+           <CourseCatalogView allCourses={allCourses} myEnrollments={myEnrollments} handleJoinCourse={handleJoinCourse} />
         )}
 
-        {!['Dashboard', 'My Courses'].includes(activeTab) && (
+        {activeTab === 'Grades' && (
+           <GradesView courses={courses} />
+        )}
+
+        {activeTab === 'Calendar' && (
+           <CalendarView myAssignments={myAssignments} />
+        )}
+
+        {!['Dashboard', 'My Courses', 'Grades', 'Calendar'].includes(activeTab) && (
           <div className="bg-white p-20 rounded-[3rem] text-center border border-dashed border-gray-200">
             <h2 className="text-2xl font-black text-gray-300 uppercase tracking-widest">{activeTab} Coming Soon</h2>
             <p className="text-gray-400 mt-2">Linking to edutrack_db...</p>
