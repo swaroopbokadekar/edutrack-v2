@@ -233,9 +233,7 @@ const AssignmentsView = ({ myCourses, selectedCourseId, handleCourseSelect, clas
   );
 };
 
-// --- NEW: REPORTS VIEW ---
 const ReportsView = ({ chartData, myCourses }) => {
-  // Brand colors for the charts
   const COLORS = ['#4f46e5', '#0ea5e9', '#f59e0b', '#f43f5e', '#22c55e'];
 
   return (
@@ -243,7 +241,6 @@ const ReportsView = ({ chartData, myCourses }) => {
       <h3 className="text-2xl font-black text-indigo-950 mb-6">Analytics & Reports</h3>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Chart: Averages by Class */}
         <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
           <h4 className="text-lg font-bold text-gray-800 mb-6">Average Score by Class</h4>
           <div className="h-64">
@@ -262,7 +259,6 @@ const ReportsView = ({ chartData, myCourses }) => {
           </div>
         </div>
 
-        {/* List: Course Health */}
         <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
            <h4 className="text-lg font-bold text-gray-800 mb-6">Course Health Overview</h4>
            <div className="space-y-4">
@@ -281,6 +277,111 @@ const ReportsView = ({ chartData, myCourses }) => {
                     </div>
                  </div>
               ))}
+           </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- NEW: SETTINGS VIEW ---
+const SettingsView = ({ teacherName }) => {
+  const [notifications, setNotifications] = useState({
+    emailAlerts: true,
+    studentEnrollment: true,
+    assignmentSubmissions: false
+  });
+
+  const handleToggle = (key) => setNotifications(prev => ({...prev, [key]: !prev[key]}));
+
+  return (
+    <div className="text-left max-w-5xl">
+      <h3 className="text-2xl font-black text-indigo-950 mb-6">Account Settings</h3>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* Column 1: Profile & Security */}
+        <div className="lg:col-span-2 space-y-8">
+          
+          {/* Profile Card */}
+          <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
+            <h4 className="text-lg font-bold text-gray-800 mb-6">Personal Information</h4>
+            <div className="flex items-center gap-6 mb-8">
+              <div className="w-20 h-20 bg-indigo-100 rounded-full overflow-hidden border-4 border-indigo-50">
+                <img src={`https://ui-avatars.com/api/?name=${teacherName}&background=e0e7ff&color=4f46e5&size=150`} alt="Profile" />
+              </div>
+              <div>
+                <button className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl font-bold text-xs hover:bg-indigo-100 transition cursor-pointer">Change Avatar</button>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Full Name</label>
+                <input type="text" defaultValue={teacherName} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 outline-none focus:ring-2 focus:ring-indigo-600" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Email Address</label>
+                <input type="email" defaultValue={`${teacherName.split(' ')[0].toLowerCase()}@edutrack.edu`} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 outline-none focus:ring-2 focus:ring-indigo-600" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Department</label>
+                <input type="text" defaultValue="High School Faculty" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 outline-none focus:ring-2 focus:ring-indigo-600" />
+              </div>
+            </div>
+            <button className="mt-6 px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition cursor-pointer shadow-md">Save Changes</button>
+          </div>
+
+          {/* Security Card */}
+          <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
+            <h4 className="text-lg font-bold text-gray-800 mb-6">Security & Password</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+               <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Current Password</label>
+                <input type="password" placeholder="••••••••" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-600 outline-none" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">New Password</label>
+                <input type="password" placeholder="••••••••" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-600 outline-none" />
+              </div>
+            </div>
+             <button className="mt-6 px-6 py-3 bg-gray-100 text-gray-500 rounded-xl font-bold text-sm hover:bg-gray-200 transition cursor-pointer">Update Password</button>
+          </div>
+        </div>
+
+        {/* Column 2: Notifications */}
+        <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 h-fit">
+           <h4 className="text-lg font-bold text-gray-800 mb-6">Notifications</h4>
+           <div className="space-y-6">
+             {/* Toggle 1 */}
+             <div className="flex items-center justify-between">
+               <div>
+                 <p className="font-bold text-sm text-gray-800">Email Alerts</p>
+                 <p className="text-[10px] text-gray-400 mt-1">Receive daily summary emails.</p>
+               </div>
+               <div onClick={() => handleToggle('emailAlerts')} className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${notifications.emailAlerts ? 'bg-green-500' : 'bg-gray-200'}`}>
+                  <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${notifications.emailAlerts ? 'translate-x-6' : ''}`}></div>
+               </div>
+             </div>
+             {/* Toggle 2 */}
+             <div className="flex items-center justify-between">
+               <div>
+                 <p className="font-bold text-sm text-gray-800">New Enrollments</p>
+                 <p className="text-[10px] text-gray-400 mt-1">Alert when a student joins.</p>
+               </div>
+               <div onClick={() => handleToggle('studentEnrollment')} className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${notifications.studentEnrollment ? 'bg-green-500' : 'bg-gray-200'}`}>
+                  <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${notifications.studentEnrollment ? 'translate-x-6' : ''}`}></div>
+               </div>
+             </div>
+             {/* Toggle 3 */}
+             <div className="flex items-center justify-between">
+               <div>
+                 <p className="font-bold text-sm text-gray-800">Assignment Subs</p>
+                 <p className="text-[10px] text-gray-400 mt-1">Ping when students submit tasks.</p>
+               </div>
+               <div onClick={() => handleToggle('assignmentSubmissions')} className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${notifications.assignmentSubmissions ? 'bg-green-500' : 'bg-gray-200'}`}>
+                  <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${notifications.assignmentSubmissions ? 'translate-x-6' : ''}`}></div>
+               </div>
+             </div>
            </div>
         </div>
       </div>
@@ -413,7 +514,8 @@ const TeacherDashboard = () => {
       if (res.ok) alert(`${status} marked!`);
     } catch (e) { alert("Failed"); }
   };
-const saveGrade = async (studentId, studentMarks) => {
+
+  const saveGrade = async (studentId, studentMarks) => {
     if(!selectedCourseId) return alert("Please select a course first!");
     
     const payload = {
@@ -436,7 +538,6 @@ const saveGrade = async (studentId, studentMarks) => {
         alert("Saved successfully!"); 
         fetchAnalytics(); 
       } else {
-        // NEW: Read the exact error from Spring Boot
         const errText = await res.text();
         alert("Backend Error: " + errText); 
         console.error("Full Backend Error:", errText);
@@ -477,7 +578,7 @@ const saveGrade = async (studentId, studentMarks) => {
             <p className="text-gray-500 font-bold text-sm mt-1">{currentDateTime}</p>
           </div>
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-gray-200 rounded-full overflow-hidden border-2 border-white shadow-md">
+            <div onClick={() => setActiveTab('Settings')} className="w-12 h-12 bg-gray-200 rounded-full overflow-hidden border-2 border-white shadow-md cursor-pointer hover:border-indigo-400 transition">
                <img src={`https://ui-avatars.com/api/?name=${teacherName}&background=e0e7ff&color=4f46e5`} alt="Profile" />
             </div>
           </div>
@@ -485,38 +586,15 @@ const saveGrade = async (studentId, studentMarks) => {
 
         {activeTab === 'Dashboard' && <DashboardHome myCourses={myCourses} chartData={chartData} setActiveTab={setActiveTab} />}
         {activeTab === 'My Classes' && <MyClassesView myCourses={myCourses} />}
+        {activeTab === 'Attendance' && <AttendanceView myCourses={myCourses} selectedCourseId={selectedCourseId} handleCourseSelect={handleCourseSelect} enrolledStudents={enrolledStudents} markRealTime={markRealTime} removeStudent={removeStudent} />}
+        {activeTab === 'Grade Book' && <GradeBookView myCourses={myCourses} selectedCourseId={selectedCourseId} handleCourseSelect={handleCourseSelect} enrolledStudents={enrolledStudents} saveGrade={saveGrade} />}
+        {activeTab === 'Assignments' && <AssignmentsView myCourses={myCourses} selectedCourseId={selectedCourseId} handleCourseSelect={handleCourseSelect} classAssignments={classAssignments} handleCreateAssignment={handleCreateAssignment} />}
+        {activeTab === 'Reports' && <ReportsView chartData={chartData} myCourses={myCourses} />}
         
-        {activeTab === 'Attendance' && (
-          <AttendanceView 
-            myCourses={myCourses} selectedCourseId={selectedCourseId}
-            handleCourseSelect={handleCourseSelect} enrolledStudents={enrolledStudents} 
-            markRealTime={markRealTime} removeStudent={removeStudent} 
-          />
-        )}
+        {/* NEW: Render Settings View */}
+        {activeTab === 'Settings' && <SettingsView teacherName={teacherName} />}
         
-        {activeTab === 'Grade Book' && (
-          <GradeBookView 
-            myCourses={myCourses} selectedCourseId={selectedCourseId}
-            handleCourseSelect={handleCourseSelect} enrolledStudents={enrolledStudents} 
-            saveGrade={saveGrade} 
-          />
-        )}
-
-        {activeTab === 'Assignments' && (
-          <AssignmentsView 
-            myCourses={myCourses} selectedCourseId={selectedCourseId}
-            handleCourseSelect={handleCourseSelect} classAssignments={classAssignments}
-            handleCreateAssignment={handleCreateAssignment}
-          />
-        )}
-
-        {/* NEW: Render Reports View */}
-        {activeTab === 'Reports' && (
-          <ReportsView chartData={chartData} myCourses={myCourses} />
-        )}
-        
-        {/* UPDATED: Remove 'Reports' from the coming soon list */}
-        {!['Dashboard', 'My Classes', 'Attendance', 'Grade Book', 'Assignments', 'Reports'].includes(activeTab) && (
+        {!['Dashboard', 'My Classes', 'Attendance', 'Grade Book', 'Assignments', 'Reports', 'Settings'].includes(activeTab) && (
           <div className="bg-white p-20 rounded-[3rem] text-center border border-dashed border-gray-200">
             <h2 className="text-2xl font-black text-gray-300 uppercase tracking-widest">{activeTab} Coming Soon</h2>
             <p className="text-gray-400 mt-2">Linking to edutrack_db...</p>

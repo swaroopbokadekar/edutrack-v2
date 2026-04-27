@@ -68,7 +68,6 @@ const CourseCatalogView = ({ allCourses, myEnrollments, handleJoinCourse }) => {
   );
 };
 
-// NEW: Academic Transcript View
 const GradesView = ({ courses }) => (
   <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden text-left p-8">
     <div className="flex justify-between items-center mb-6">
@@ -93,7 +92,6 @@ const GradesView = ({ courses }) => (
               <p className="font-bold text-indigo-950">{c.subject}</p>
               <p className="text-[10px] text-gray-500">{c.teacher}</p>
             </td>
-            {/* Displaying the same score for mock purposes, but this simulates the detailed breakdown */}
             <td className="px-8 py-5 text-center font-bold text-gray-500">{c.score > 0 ? c.score : '-'}</td>
             <td className="px-8 py-5 text-center font-bold text-gray-500">{c.score > 0 ? c.score : '-'}</td>
             <td className="px-8 py-5 text-center font-bold text-gray-500">{c.score > 0 ? c.score : '-'}</td>
@@ -108,7 +106,6 @@ const GradesView = ({ courses }) => (
   </div>
 );
 
-// NEW: Timeline Schedule View
 const CalendarView = ({ myAssignments }) => (
   <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100 text-left max-w-3xl">
     <h3 className="text-2xl font-black text-indigo-950 mb-2">Schedule & Deadlines</h3>
@@ -123,17 +120,13 @@ const CalendarView = ({ myAssignments }) => (
     ) : (
       <div className="relative border-l-2 border-indigo-100 ml-4 space-y-8 py-4">
         {myAssignments.map((task, i) => {
-          // Determine dot color
           let dotColor = 'bg-indigo-500';
           if (task.type === 'ASSIGNMENT') dotColor = 'bg-teal-500';
           if (task.type === 'PROJECT') dotColor = 'bg-rose-500';
 
           return (
             <div key={i} className="relative pl-8">
-              {/* Timeline Dot */}
               <div className={`absolute -left-[9px] top-4 w-4 h-4 rounded-full border-4 border-white ${dotColor} shadow-sm`}></div>
-              
-              {/* Task Card */}
               <div className={`p-6 rounded-2xl border border-gray-100 shadow-sm border-l-4 ${getBorderColor(task.type)} bg-gray-50/30 hover:bg-white transition`}>
                 <div className="flex justify-between items-start">
                   <div>
@@ -154,6 +147,179 @@ const CalendarView = ({ myAssignments }) => (
     )}
   </div>
 );
+
+const AttendanceDetailsView = ({ attendanceData, courses }) => (
+  <div className="space-y-8 text-left">
+    <h3 className="text-2xl font-black text-indigo-950 mb-6">Attendance Records</h3>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="lg:col-span-2 bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
+        <h4 className="text-lg font-bold text-gray-800 mb-6">Monthly Overview</h4>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={attendanceData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} />
+              <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} domain={[60, 100]} />
+              <Tooltip cursor={false} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
+              <ReferenceLine y={75} stroke="#f87171" strokeDasharray="3 3" label={{ position: 'insideTopLeft', value: 'Minimum Required: 75%', fill: '#f87171', fontSize: 10 }} />
+              <Line type="monotone" dataKey="val" stroke="#4f46e5" strokeWidth={3} dot={{r: 5, fill: '#ffffff', stroke: '#4f46e5', strokeWidth: 2}} activeDot={{r: 8}} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+      <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
+        <h4 className="text-lg font-bold text-gray-800 mb-6">By Subject</h4>
+        <div className="space-y-4">
+           {courses.map((c, i) => (
+             <div key={i} className="flex justify-between items-center p-3 border border-gray-50 rounded-xl bg-gray-50/50">
+               <span className="font-bold text-sm text-gray-700">{c.subject}</span>
+               <span className={`text-xs font-black px-2 py-1 rounded-lg ${c.score > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}`}>
+                 {c.score > 0 ? '92%' : 'N/A'}
+               </span>
+             </div>
+           ))}
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const AlertsView = () => (
+  <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100 text-left max-w-3xl">
+    <div className="flex justify-between items-center mb-8">
+      <h3 className="text-2xl font-black text-indigo-950">System Alerts</h3>
+      <span className="text-xs font-bold text-indigo-600 cursor-pointer hover:underline">Mark all as read</span>
+    </div>
+    <div className="space-y-4">
+      <div className="bg-blue-50 p-5 rounded-2xl border border-blue-100 flex gap-4 items-start shadow-sm">
+        <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-lg shadow-sm">ℹ️</div>
+        <div>
+          <h4 className="font-black text-blue-900">Attendance Update</h4>
+          <p className="text-sm text-blue-700 mt-1">Your overall attendance is currently 87%, which is above the 75% minimum requirement. Keep up the good work!</p>
+          <span className="text-[10px] font-bold text-blue-400 mt-3 block">Just now</span>
+        </div>
+      </div>
+      <div className="bg-green-50 p-5 rounded-2xl border border-green-100 flex gap-4 items-start shadow-sm opacity-70">
+        <div className="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-lg shadow-sm">✅</div>
+        <div>
+          <h4 className="font-black text-green-900">Assignment Graded</h4>
+          <p className="text-sm text-green-700 mt-1">Prof. Santosh Patil has graded your English Assignment. Check your Grades tab for details.</p>
+          <span className="text-[10px] font-bold text-green-400 mt-3 block">2 days ago</span>
+        </div>
+      </div>
+      <div className="bg-amber-50 p-5 rounded-2xl border border-amber-100 flex gap-4 items-start shadow-sm opacity-70">
+        <div className="w-10 h-10 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-lg shadow-sm">⚠️</div>
+        <div>
+          <h4 className="font-black text-amber-900">Semester Registration</h4>
+          <p className="text-sm text-amber-700 mt-1">Please ensure you have joined all your required classes in the Course Catalog before the end of the week.</p>
+          <span className="text-[10px] font-bold text-amber-400 mt-3 block">1 week ago</span>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// --- UPGRADED: Educational Platform Profile View ---
+const ProfileView = ({ studentName, studentId }) => {
+  const [notifications, setNotifications] = useState(true);
+
+  return (
+    <div className="space-y-8 text-left max-w-6xl">
+       <h3 className="text-2xl font-black text-indigo-950 mb-6">Student Profile & Settings</h3>
+
+       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* Left Column: Identity & Contact Card */}
+          <div className="space-y-8">
+             <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 text-center">
+                <div className="w-32 h-32 mx-auto rounded-full overflow-hidden border-4 border-indigo-50 shadow-md mb-4">
+                  <img src={`https://ui-avatars.com/api/?name=${studentName}&background=e0e7ff&color=4f46e5&size=256`} alt="Profile" className="w-full h-full object-cover" />
+                </div>
+                <h4 className="text-2xl font-black text-gray-800">{studentName}</h4>
+                <p className="text-sm font-bold text-indigo-600 mt-1">Computer Science & Engineering</p>
+                <span className="inline-block mt-3 px-3 py-1 bg-gray-100 text-gray-500 rounded-lg text-xs font-black tracking-widest uppercase">ID: #EDU-{studentId || '000'}</span>
+
+                <div className="mt-8 text-left space-y-4">
+                   <div>
+                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Email Address</p>
+                     <p className="font-bold text-gray-700 text-sm mt-1">{`${studentName.toLowerCase().replace(/\s/g, '')}@student.edutrack.com`}</p>
+                   </div>
+                   <div>
+                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Phone Number</p>
+                     <p className="font-bold text-gray-700 text-sm mt-1">+91 98765 43210</p>
+                   </div>
+                </div>
+                <button className="w-full mt-8 px-4 py-3 bg-indigo-50 text-indigo-600 rounded-xl font-bold text-sm hover:bg-indigo-100 transition cursor-pointer">Edit Profile</button>
+             </div>
+          </div>
+
+          {/* Right Column: Academic Portfolio & Preferences */}
+          <div className="lg:col-span-2 space-y-8">
+             
+             {/* Academic Details */}
+             <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
+                <h4 className="text-lg font-bold text-gray-800 mb-6">Academic Overview</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                   <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Program</p>
+                      <p className="font-bold text-gray-800 mt-1">B.E. Computer Science</p>
+                   </div>
+                   <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Current Semester</p>
+                      <p className="font-bold text-gray-800 mt-1">Semester 8</p>
+                   </div>
+                   <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Enrollment Year</p>
+                      <p className="font-bold text-gray-800 mt-1">2022 - 2026</p>
+                   </div>
+                   <div className="p-4 bg-green-50 rounded-2xl border border-green-100">
+                      <p className="text-[10px] font-black text-green-500 uppercase tracking-widest">Academic Standing</p>
+                      <p className="font-black text-green-700 mt-1">Good Standing (GPA: 8.2)</p>
+                   </div>
+                </div>
+             </div>
+
+             {/* Earned Badges/Certificates */}
+             <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
+                <h4 className="text-lg font-bold text-gray-800 mb-6">Credentials & Certifications</h4>
+                <div className="flex gap-4 overflow-x-auto pb-2">
+                   <div className="min-w-[140px] p-4 bg-sky-50 rounded-2xl border border-sky-100 text-center">
+                      <span className="text-3xl block mb-2">💻</span>
+                      <p className="text-xs font-bold text-sky-900">Java Full Stack</p>
+                      <p className="text-[9px] text-sky-600 mt-1">Certified</p>
+                   </div>
+                   <div className="min-w-[140px] p-4 bg-amber-50 rounded-2xl border border-amber-100 text-center">
+                      <span className="text-3xl block mb-2">📊</span>
+                      <p className="text-xs font-bold text-amber-900">Big Data</p>
+                      <p className="text-[9px] text-amber-600 mt-1">Foundations</p>
+                   </div>
+                   <div className="min-w-[140px] p-4 bg-rose-50 rounded-2xl border border-rose-100 text-center">
+                      <span className="text-3xl block mb-2">🚀</span>
+                      <p className="text-xs font-bold text-rose-900">Hackathon</p>
+                      <p className="text-[9px] text-rose-600 mt-1">Project ZeroBin</p>
+                   </div>
+                </div>
+             </div>
+
+             {/* Preferences */}
+             <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
+                <h4 className="text-lg font-bold text-gray-800 mb-6">Preferences</h4>
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                  <div>
+                    <p className="font-bold text-sm text-gray-800">Assignment Reminders</p>
+                    <p className="text-[10px] text-gray-400 mt-1">Get emails 24h before a deadline.</p>
+                  </div>
+                  <div onClick={() => setNotifications(!notifications)} className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${notifications ? 'bg-green-500' : 'bg-gray-200'}`}>
+                     <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${notifications ? 'translate-x-6' : ''}`}></div>
+                  </div>
+                </div>
+             </div>
+
+          </div>
+       </div>
+    </div>
+  );
+};
 
 // --- MAIN DASHBOARD ---
 
@@ -295,8 +461,8 @@ const StudentDashboard = () => {
             <span className="text-gray-400 text-sm">| {currentDateTime}</span>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-gray-400 cursor-pointer">🔔</span>
-            <div className="w-8 h-8 bg-gray-200 rounded-full overflow-hidden border border-gray-300">
+            <span onClick={() => setActiveTab('Alerts')} className="text-gray-400 cursor-pointer hover:text-indigo-600 transition">🔔</span>
+            <div onClick={() => setActiveTab('Profile')} className="w-8 h-8 bg-gray-200 rounded-full overflow-hidden border border-gray-300 cursor-pointer hover:border-indigo-500 transition">
                <img src={`https://ui-avatars.com/api/?name=${studentName}&background=f3f4f6&color=4f46e5`} alt="Profile" />
             </div>
           </div>
@@ -316,7 +482,7 @@ const StudentDashboard = () => {
               <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
                 <div>
                   <p className="text-gray-400 text-xs font-bold uppercase mb-1">GPA</p>
-                  <h4 className="text-2xl font-black text-gray-800">3.4</h4>
+                  <h4 className="text-2xl font-black text-gray-800">8.2</h4>
                   <p className="text-[10px] text-gray-400 mt-1">Above class avg</p>
                 </div>
                 <CircularProgress value={3.4} max={4.0} color="#4f46e5" />
@@ -424,24 +590,12 @@ const StudentDashboard = () => {
         )}
 
         {/* --- DYNAMIC VIEWS --- */}
-        {activeTab === 'My Courses' && (
-           <CourseCatalogView allCourses={allCourses} myEnrollments={myEnrollments} handleJoinCourse={handleJoinCourse} />
-        )}
-
-        {activeTab === 'Grades' && (
-           <GradesView courses={courses} />
-        )}
-
-        {activeTab === 'Calendar' && (
-           <CalendarView myAssignments={myAssignments} />
-        )}
-
-        {!['Dashboard', 'My Courses', 'Grades', 'Calendar'].includes(activeTab) && (
-          <div className="bg-white p-20 rounded-[3rem] text-center border border-dashed border-gray-200">
-            <h2 className="text-2xl font-black text-gray-300 uppercase tracking-widest">{activeTab} Coming Soon</h2>
-            <p className="text-gray-400 mt-2">Linking to edutrack_db...</p>
-          </div>
-        )}
+        {activeTab === 'My Courses' && <CourseCatalogView allCourses={allCourses} myEnrollments={myEnrollments} handleJoinCourse={handleJoinCourse} />}
+        {activeTab === 'Grades' && <GradesView courses={courses} />}
+        {activeTab === 'Calendar' && <CalendarView myAssignments={myAssignments} />}
+        {activeTab === 'Attendance' && <AttendanceDetailsView attendanceData={attendanceData} courses={courses} />}
+        {activeTab === 'Alerts' && <AlertsView />}
+        {activeTab === 'Profile' && <ProfileView studentName={studentName} studentId={studentId} />}
 
       </main>
     </div>
