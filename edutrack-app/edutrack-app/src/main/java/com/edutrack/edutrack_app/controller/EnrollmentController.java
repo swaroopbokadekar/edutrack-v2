@@ -44,4 +44,10 @@ public class EnrollmentController {
     public List<Enrollment> getStudentEnrollments(@PathVariable Long studentId) {
         return enrollmentRepository.findByStudentId(studentId);
     }
+    
+    // NEW: Get all enrollments for a specific course
+    @GetMapping("/course/{courseId}")
+    public List<Enrollment> getCourseEnrollments(@PathVariable Long courseId) {
+        return enrollmentRepository.findByCourseId(courseId);
+    }
 }
