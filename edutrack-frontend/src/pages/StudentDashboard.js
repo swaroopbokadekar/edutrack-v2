@@ -18,7 +18,7 @@ const CircularProgress = ({ value, color, max = 100 }) => {
   );
 };
 
-// --- NEW: Course Catalog View ---
+// --- Course Catalog View ---
 const CourseCatalogView = ({ allCourses, myEnrollments, handleJoinCourse }) => {
   return (
     <div className="text-left">
@@ -62,10 +62,12 @@ const StudentDashboard = () => {
   const [studentName, setStudentName] = useState('Student');
   const [currentDateTime, setCurrentDateTime] = useState('');
   
-  // States for Enrollments
+  // Real-time Data States
   const [allCourses, setAllCourses] = useState([]);
   const [myEnrollments, setMyEnrollments] = useState([]);
+  const [myAssignments, setMyAssignments] = useState([]); // NEW: State for Deadlines
   
+  // Widget Data
   const [courses, setCourses] = useState([
     { subject: 'Mathematics', teacher: 'Mr. Kumar', score: 0, grade: 'N/A', color: '#4f46e5', hex: 'text-indigo-600', bg: 'bg-indigo-50' },
     { subject: 'Science', teacher: 'Ms. Park', score: 0, grade: 'N/A', color: '#0ea5e9', hex: 'text-sky-600', bg: 'bg-sky-50' },
@@ -93,7 +95,11 @@ const StudentDashboard = () => {
       const enrollRes = await fetch(`http://localhost:8080/api/enrollments/student/${id}`);
       if (enrollRes.ok) setMyEnrollments(await enrollRes.json());
 
-      // 3. Fetch grades
+      // 3. Fetch REAL assignments from backend!
+      const assignRes = await fetch(`http://localhost:8080/api/assignments/student/${id}`);
+      if (assignRes.ok) setMyAssignments(await assignRes.json());
+
+      // 4. Fetch grades
       const gradeRes = await fetch(`http://localhost:8080/api/grades/${id}`);
       if (gradeRes.ok) {
         const gradeData = await gradeRes.json();
@@ -133,12 +139,7 @@ const StudentDashboard = () => {
 
   const handleJoinCourse = async (courseId) => {
     try {
-      // ParseInt forces numbers to prevent backend type errors
-      const payload = {
-        studentId: parseInt(studentId),
-        courseId: parseInt(courseId)
-      };
-
+      const payload = { studentId: parseInt(studentId), courseId: parseInt(courseId) };
       const response = await fetch('http://localhost:8080/api/enrollments/join', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -147,7 +148,7 @@ const StudentDashboard = () => {
       
       if (response.ok) {
         alert("Successfully enrolled in class!");
-        fetchData(studentId); // Refresh catalogs and counts
+        fetchData(studentId);
       } else {
         const errText = await response.text();
         alert("Could not enroll: " + errText);
@@ -161,6 +162,18 @@ const StudentDashboard = () => {
   const handleLogout = () => {
     localStorage.clear();
     navigate('/login');
+  };
+
+  // Helper for dynamic assignment colors
+  const getBorderColor = (type) => {
+    if (type === 'QUIZ') return 'border-indigo-500';
+    if (type === 'ASSIGNMENT') return 'border-teal-500';
+    return 'border-rose-500';
+  };
+  const getTextColor = (type) => {
+    if (type === 'QUIZ') return 'text-indigo-400 border-indigo-100';
+    if (type === 'ASSIGNMENT') return 'text-teal-500 border-teal-100';
+    return 'text-rose-400 border-rose-100';
   };
 
   const attendanceData = [
@@ -224,7 +237,7 @@ const StudentDashboard = () => {
                 <div>
                   <p className="text-gray-400 text-xs font-bold uppercase mb-1">GPA</p>
                   <h4 className="text-2xl font-black text-gray-800">3.4</h4>
-                  <p className="text-[10px] text-gray-400 mt-1">Above class average</p>
+                  <p className="text-[10px] text-gray-400 mt-1">Above class avg</p>
                 </div>
                 <CircularProgress value={3.4} max={4.0} color="#4f46e5" />
               </div>
@@ -238,11 +251,11 @@ const StudentDashboard = () => {
               </div>
               <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
                 <div>
-                  <p className="text-gray-400 text-xs font-bold uppercase mb-1">Upcoming</p>
-                  <h4 className="text-2xl font-black text-gray-800">3</h4>
-                  <p className="text-[10px] text-gray-400 mt-1">Due this week</p>
+                  <p className="text-gray-400 text-xs font-bold uppercase mb-1">Tasks Due</p>
+                  <h4 className="text-2xl font-black text-gray-800">{myAssignments.length}</h4>
+                  <p className="text-[10px] text-gray-400 mt-1">Pending items</p>
                 </div>
-                <CircularProgress value={100} color="#f59e0b" />
+                <CircularProgress value={myAssignments.length > 0 ? 100 : 0} color="#f59e0b" />
               </div>
             </div>
 
@@ -276,21 +289,22 @@ const StudentDashboard = () => {
                   <h3 className="text-sm font-bold text-gray-800">Upcoming Deadlines</h3>
                   <span className="text-indigo-600 text-xs font-bold cursor-pointer hover:underline">View Calendar</span>
                 </div>
+                
+                {/* DYNAMIC ASSIGNMENTS RENDERED HERE */}
                 <div className="space-y-3">
-                   {[
-                     { title: 'Math Quiz Ch.7', sub: 'Mathematics • Due Tomorrow', type: 'QUIZ', color: 'border-indigo-500' },
-                     { title: 'Science Lab Report', sub: 'Science • Due in 2 days', type: 'ASSIGNMENT', color: 'border-teal-500' },
-                     { title: 'English Essay Draft', sub: 'English • Due in 5 days', type: 'PROJECT', color: 'border-rose-500' },
-                     { title: 'History Presentation', sub: 'History • Due Next Week', type: 'PROJECT', color: 'border-amber-500' }
-                   ].map((item, i) => (
-                     <div key={i} className={`p-4 rounded-xl border border-gray-100 border-l-4 shadow-sm flex justify-between items-center ${item.color}`}>
-                        <div>
-                          <p className="font-bold text-gray-800 text-sm">{item.title}</p>
-                          <p className="text-[10px] text-gray-400 mt-1">{item.sub}</p>
-                        </div>
-                        <span className="text-[9px] font-bold text-gray-400 border border-gray-200 px-2 py-1 rounded bg-gray-50">{item.type}</span>
-                     </div>
-                   ))}
+                   {myAssignments.length === 0 ? (
+                     <p className="text-gray-400 text-xs text-center py-4">No upcoming deadlines.</p>
+                   ) : (
+                     myAssignments.map((item, i) => (
+                       <div key={i} className={`p-4 rounded-xl border border-gray-100 border-l-4 shadow-sm flex justify-between items-center ${getBorderColor(item.type)}`}>
+                          <div>
+                            <p className="font-bold text-gray-800 text-sm">{item.title}</p>
+                            <p className="text-[10px] text-gray-400 mt-1">{item.courseName} • Due {item.dueDate}</p>
+                          </div>
+                          <span className={`text-[9px] font-bold border px-2 py-1 rounded bg-gray-50 ${getTextColor(item.type)}`}>{item.type}</span>
+                       </div>
+                     ))
+                   )}
                 </div>
               </div>
             </div>
@@ -377,7 +391,7 @@ const StudentDashboard = () => {
           </>
         )}
 
-        {/* --- NEW: Course Catalog Tab --- */}
+        {/* --- Course Catalog Tab --- */}
         {activeTab === 'My Courses' && (
            <CourseCatalogView 
               allCourses={allCourses} 

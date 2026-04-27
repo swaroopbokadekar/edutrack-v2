@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 // --- SUB-COMPONENTS ---
 
 const DashboardHome = ({ myCourses, chartData, setActiveTab }) => {
-  // Calculate total students across all assigned classes
   const totalStudents = myCourses.reduce((sum, course) => sum + (course.enrolledStudents || 0), 0);
 
   return (
@@ -68,7 +67,6 @@ const MyClassesView = ({ myCourses }) => (
       <div className="bg-white p-12 rounded-3xl border border-gray-100 text-center shadow-sm">
         <span className="text-4xl block mb-4">📭</span>
         <h4 className="text-lg font-bold text-gray-500">No classes assigned yet.</h4>
-        <p className="text-sm text-gray-400">Contact your administrator to be assigned to a course.</p>
       </div>
     ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -92,35 +90,22 @@ const MyClassesView = ({ myCourses }) => (
   </div>
 );
 
-// --- UPDATED ATTENDANCE VIEW ---
 const AttendanceView = ({ myCourses, selectedCourseId, handleCourseSelect, enrolledStudents, markRealTime, removeStudent }) => (
   <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden text-left p-8">
     <div className="flex justify-between items-center mb-8">
       <h3 className="text-2xl font-black text-indigo-950">Daily Attendance</h3>
-      
-      {/* NEW: Course Selector Dropdown */}
-      <select 
-        value={selectedCourseId} 
-        onChange={(e) => handleCourseSelect(e.target.value)}
-        className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-600 font-bold text-indigo-950 cursor-pointer"
-      >
+      <select value={selectedCourseId} onChange={(e) => handleCourseSelect(e.target.value)} className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-600 font-bold text-indigo-950 cursor-pointer">
         <option value="">-- Select a Class --</option>
         {myCourses.map(c => <option key={c.id} value={c.id}>{c.courseName} ({c.gradeLevel})</option>)}
       </select>
-
     </div>
-
     {selectedCourseId ? (
       <table className="w-full text-left">
         <thead className="bg-gray-50 text-gray-400 text-[10px] font-black uppercase tracking-widest">
-          <tr>
-            <th className="px-8 py-4">#</th>
-            <th className="px-8 py-4">Student Name</th>
-            <th className="px-8 py-4 text-center">Action</th>
-          </tr>
+          <tr><th className="px-8 py-4">#</th><th className="px-8 py-4">Student Name</th><th className="px-8 py-4 text-center">Action</th></tr>
         </thead>
         <tbody className="divide-y divide-gray-50">
-          {enrolledStudents.length === 0 && <tr><td colSpan="3" className="p-8 text-center text-gray-400">No students enrolled in this class yet.</td></tr>}
+          {enrolledStudents.length === 0 && <tr><td colSpan="3" className="p-8 text-center text-gray-400">No students enrolled yet.</td></tr>}
           {enrolledStudents.map((s, index) => (
             <tr key={s.id}>
               <td className="px-8 py-5 text-gray-400 font-bold">{index + 1}</td>
@@ -128,80 +113,177 @@ const AttendanceView = ({ myCourses, selectedCourseId, handleCourseSelect, enrol
               <td className="px-8 py-5 flex justify-center gap-3">
                 <button onClick={() => markRealTime(s.id, 'Present')} className="px-4 py-1 bg-green-100 text-green-700 rounded-lg font-bold text-xs hover:bg-green-200 cursor-pointer">Present</button>
                 <button onClick={() => markRealTime(s.id, 'Absent')} className="px-4 py-1 bg-red-100 text-red-700 rounded-lg font-bold text-xs hover:bg-red-200 cursor-pointer">Absent</button>
-                <button onClick={() => removeStudent(s.id)} className="px-4 py-1 bg-gray-100 text-gray-400 rounded-lg font-bold text-xs hover:bg-red-500 hover:text-white transition cursor-pointer">Remove 🗑️</button>
+                <button onClick={() => removeStudent(s.id)} className="px-4 py-1 bg-gray-100 text-gray-400 rounded-lg font-bold text-xs hover:bg-red-500 hover:text-white transition cursor-pointer">Remove</button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
     ) : (
-      <div className="text-center p-12 text-gray-400 border-2 border-dashed border-gray-100 rounded-2xl">
-        Please select a class from the dropdown above to take attendance.
-      </div>
+      <div className="text-center p-12 text-gray-400 border-2 border-dashed border-gray-100 rounded-2xl">Please select a class from the dropdown above to take attendance.</div>
     )}
   </div>
 );
 
-// --- UPDATED GRADE BOOK VIEW ---
 const GradeBookView = ({ myCourses, selectedCourseId, handleCourseSelect, enrolledStudents, saveGrade }) => {
   const [marks, setMarks] = useState({});
-  const handleInputChange = (studentId, field, value) => {
-    setMarks(prev => ({ ...prev, [studentId]: { ...prev[studentId], [field]: value } }));
-  };
+  const handleInputChange = (studentId, field, value) => { setMarks(prev => ({ ...prev, [studentId]: { ...prev[studentId], [field]: value } })); };
 
   return (
     <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden text-left p-8">
       <div className="flex justify-between items-center mb-8">
         <h3 className="text-2xl font-black text-indigo-950">Grade Book - Semester 1</h3>
-        
-        {/* NEW: Course Selector Dropdown */}
-        <select 
-          value={selectedCourseId} 
-          onChange={(e) => handleCourseSelect(e.target.value)}
-          className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-600 font-bold text-indigo-950 cursor-pointer"
-        >
+        <select value={selectedCourseId} onChange={(e) => handleCourseSelect(e.target.value)} className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-600 font-bold text-indigo-950 cursor-pointer">
           <option value="">-- Select a Class --</option>
           {myCourses.map(c => <option key={c.id} value={c.id}>{c.courseName} ({c.gradeLevel})</option>)}
         </select>
       </div>
-
       {selectedCourseId ? (
         <table className="w-full text-left">
           <thead className="bg-gray-50 text-gray-400 text-[10px] font-black uppercase tracking-widest">
-            <tr>
-              <th className="px-8 py-4">Student Name</th>
-              <th className="px-8 py-4 text-center">Quiz</th>
-              <th className="px-8 py-4 text-center">Midterm</th>
-              <th className="px-8 py-4 text-center">Assignment</th>
-              <th className="px-8 py-4 text-center">Action</th>
-            </tr>
+            <tr><th className="px-8 py-4">Student Name</th><th className="px-8 py-4 text-center">Quiz</th><th className="px-8 py-4 text-center">Midterm</th><th className="px-8 py-4 text-center">Assignment</th><th className="px-8 py-4 text-center">Action</th></tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
-            {enrolledStudents.length === 0 && <tr><td colSpan="5" className="p-8 text-center text-gray-400">No students enrolled in this class yet.</td></tr>}
+            {enrolledStudents.length === 0 && <tr><td colSpan="5" className="p-8 text-center text-gray-400">No students enrolled yet.</td></tr>}
             {enrolledStudents.map((s) => (
               <tr key={s.id}>
                 <td className="px-8 py-5 font-bold text-indigo-950">{s.name}</td>
-                <td className="px-8 py-5 text-center">
-                  <input type="number" placeholder="0" className="w-20 p-2 border rounded-xl outline-none text-center bg-gray-50 focus:bg-white" onChange={(e) => handleInputChange(s.id, 'quiz', e.target.value)} />
-                </td>
-                <td className="px-8 py-5 text-center">
-                  <input type="number" placeholder="0" className="w-20 p-2 border rounded-xl outline-none text-center bg-gray-50 focus:bg-white" onChange={(e) => handleInputChange(s.id, 'midterm', e.target.value)} />
-                </td>
-                <td className="px-8 py-5 text-center">
-                  <input type="number" placeholder="0" className="w-20 p-2 border rounded-xl outline-none text-center bg-gray-50 focus:bg-white" onChange={(e) => handleInputChange(s.id, 'assignment', e.target.value)} />
-                </td>
-                <td className="px-8 py-5 text-center">
-                  <button onClick={() => saveGrade(s.id, marks[s.id])} className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold text-xs hover:bg-indigo-700 transition cursor-pointer">Save Grade</button>
-                </td>
+                <td className="px-8 py-5 text-center"><input type="number" placeholder="0" className="w-20 p-2 border rounded-xl outline-none text-center bg-gray-50 focus:bg-white" onChange={(e) => handleInputChange(s.id, 'quiz', e.target.value)} /></td>
+                <td className="px-8 py-5 text-center"><input type="number" placeholder="0" className="w-20 p-2 border rounded-xl outline-none text-center bg-gray-50 focus:bg-white" onChange={(e) => handleInputChange(s.id, 'midterm', e.target.value)} /></td>
+                <td className="px-8 py-5 text-center"><input type="number" placeholder="0" className="w-20 p-2 border rounded-xl outline-none text-center bg-gray-50 focus:bg-white" onChange={(e) => handleInputChange(s.id, 'assignment', e.target.value)} /></td>
+                <td className="px-8 py-5 text-center"><button onClick={() => saveGrade(s.id, marks[s.id])} className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold text-xs hover:bg-indigo-700 transition cursor-pointer">Save</button></td>
               </tr>
             ))}
           </tbody>
         </table>
       ) : (
-        <div className="text-center p-12 text-gray-400 border-2 border-dashed border-gray-100 rounded-2xl">
-          Please select a class from the dropdown above to enter grades.
-        </div>
+        <div className="text-center p-12 text-gray-400 border-2 border-dashed border-gray-100 rounded-2xl">Please select a class from the dropdown above to enter grades.</div>
       )}
+    </div>
+  );
+};
+
+const AssignmentsView = ({ myCourses, selectedCourseId, handleCourseSelect, classAssignments, handleCreateAssignment }) => {
+  const [newAssignment, setNewAssignment] = useState({ title: '', type: 'QUIZ', dueDate: '' });
+
+  const onSubmit = (e) => {
+    e.preventDefault();
+    if(!selectedCourseId) return alert("Please select a class first!");
+    handleCreateAssignment(newAssignment);
+    setNewAssignment({ title: '', type: 'QUIZ', dueDate: '' });
+  };
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 text-left">
+      <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
+        <h3 className="text-2xl font-black text-indigo-950 mb-6">Post New Task</h3>
+        <form onSubmit={onSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Select Class</label>
+            <select value={selectedCourseId} onChange={(e) => handleCourseSelect(e.target.value)} required className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-600 font-bold text-indigo-950 cursor-pointer">
+              <option value="">-- Select a Class --</option>
+              {myCourses.map(c => <option key={c.id} value={c.id}>{c.courseName}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Title</label>
+            <input type="text" required value={newAssignment.title} onChange={(e) => setNewAssignment({...newAssignment, title: e.target.value})} placeholder="e.g. Read Chapter 4" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-600 outline-none" />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Type</label>
+            <select value={newAssignment.type} onChange={(e) => setNewAssignment({...newAssignment, type: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-600 outline-none">
+              <option>QUIZ</option>
+              <option>ASSIGNMENT</option>
+              <option>PROJECT</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Due Date</label>
+            <input type="text" required value={newAssignment.dueDate} onChange={(e) => setNewAssignment({...newAssignment, dueDate: e.target.value})} placeholder="e.g. Tomorrow or Nov 5" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-600 outline-none" />
+          </div>
+          <button type="submit" className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition cursor-pointer mt-4">Post to Class 🚀</button>
+        </form>
+      </div>
+
+      <div className="lg:col-span-2 bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden">
+        <div className="p-8 border-b border-gray-50">
+          <h3 className="text-2xl font-black text-indigo-950">Active Class Tasks</h3>
+        </div>
+        {!selectedCourseId ? (
+           <div className="p-12 text-center text-gray-400">Select a class to view its active tasks.</div>
+        ) : (
+          <div className="p-8 space-y-4">
+            {classAssignments.length === 0 && <p className="text-gray-400 text-center">No tasks posted yet.</p>}
+            {classAssignments.map((task, i) => (
+              <div key={i} className="p-5 rounded-2xl border border-gray-100 border-l-4 border-l-indigo-500 shadow-sm flex justify-between items-center bg-gray-50/50">
+                <div>
+                  <span className="text-[10px] font-black text-indigo-400 border border-indigo-100 px-2 py-1 rounded bg-white">{task.type}</span>
+                  <h4 className="font-bold text-gray-800 text-lg mt-2">{task.title}</h4>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Due</p>
+                  <p className="font-black text-rose-500">{task.dueDate}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// --- NEW: REPORTS VIEW ---
+const ReportsView = ({ chartData, myCourses }) => {
+  // Brand colors for the charts
+  const COLORS = ['#4f46e5', '#0ea5e9', '#f59e0b', '#f43f5e', '#22c55e'];
+
+  return (
+    <div className="space-y-8 text-left">
+      <h3 className="text-2xl font-black text-indigo-950 mb-6">Analytics & Reports</h3>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Chart: Averages by Class */}
+        <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
+          <h4 className="text-lg font-bold text-gray-800 mb-6">Average Score by Class</h4>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 10, left: 0, bottom: 0 }}>
+                <XAxis type="number" hide domain={[0, 100]} />
+                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b', fontWeight: 'bold'}} width={100} />
+                <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{borderRadius: '12px', border: 'none'}} />
+                <Bar dataKey="avg" radius={[0, 8, 8, 0]} barSize={24}>
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* List: Course Health */}
+        <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
+           <h4 className="text-lg font-bold text-gray-800 mb-6">Course Health Overview</h4>
+           <div className="space-y-4">
+              {myCourses.length === 0 && <p className="text-gray-400 text-sm">No classes assigned to analyze.</p>}
+              {myCourses.map((course, idx) => (
+                 <div key={course.id} className="p-4 rounded-xl border border-gray-100 flex justify-between items-center bg-gray-50">
+                    <div>
+                       <p className="font-bold text-indigo-950">{course.courseName}</p>
+                       <p className="text-[10px] uppercase tracking-widest text-gray-500">{course.gradeLevel}</p>
+                    </div>
+                    <div className="text-right">
+                       <p className={`text-sm font-black ${course.enrolledStudents > 0 ? 'text-emerald-500' : 'text-amber-500'}`}>
+                         {course.enrolledStudents > 0 ? 'Active' : 'Pending Students'}
+                       </p>
+                       <p className="text-xs font-bold text-gray-400">{course.enrolledStudents || 0} Enrolled</p>
+                    </div>
+                 </div>
+              ))}
+           </div>
+        </div>
+      </div>
     </div>
   );
 };
@@ -210,16 +292,18 @@ const GradeBookView = ({ myCourses, selectedCourseId, handleCourseSelect, enroll
 
 const TeacherDashboard = () => {
   const [activeTab, setActiveTab] = useState('Dashboard');
-  const [allStudents, setAllStudents] = useState([]); // All students in DB
+  const [allStudents, setAllStudents] = useState([]); 
   const [chartData, setChartData] = useState([]);
   
   const [teacherName, setTeacherName] = useState('Teacher');
   const [currentDateTime, setCurrentDateTime] = useState('');
   
   const [myCourses, setMyCourses] = useState([]); 
-  const [selectedCourseId, setSelectedCourseId] = useState(''); // NEW: Track selected dropdown class
-  const [enrolledStudents, setEnrolledStudents] = useState([]); // NEW: Filtered students for table
+  const [selectedCourseId, setSelectedCourseId] = useState(''); 
+  const [enrolledStudents, setEnrolledStudents] = useState([]); 
   
+  const [classAssignments, setClassAssignments] = useState([]);
+
   const navigate = useNavigate();
 
   const fetchStudents = async () => {
@@ -265,30 +349,54 @@ const TeacherDashboard = () => {
     return () => clearInterval(timerId); 
   }, []);
 
-  // --- NEW: Fetch only students enrolled in the selected course ---
   const handleCourseSelect = async (courseId) => {
     setSelectedCourseId(courseId);
     if (!courseId) {
       setEnrolledStudents([]);
+      setClassAssignments([]);
       return;
     }
     
     try {
+      // Fetch Enrollments
       const res = await fetch(`http://localhost:8080/api/enrollments/course/${courseId}`);
       const enrollments = await res.json();
-      
-      // Extract student IDs and filter the main student list
       const enrolledIds = enrollments.map(e => e.studentId);
       const filteredStudents = allStudents.filter(student => enrolledIds.includes(student.id));
-      
       setEnrolledStudents(filteredStudents);
+
+      // Fetch Assignments for this course
+      const assignRes = await fetch(`http://localhost:8080/api/assignments/course/${courseId}`);
+      setClassAssignments(await assignRes.json());
+
     } catch (err) {
-      console.error("Failed to fetch enrollments for course", err);
+      console.error("Failed to fetch course data", err);
     }
   };
 
-  // Note: Student removal from school is an Admin job now. 
-  // For Teacher view, we will just simulate a remove locally to keep UI responsive.
+  const handleCreateAssignment = async (newAssignment) => {
+    const selectedCourse = myCourses.find(c => c.id === parseInt(selectedCourseId));
+    
+    const payload = {
+       ...newAssignment,
+       courseId: parseInt(selectedCourseId),
+       courseName: selectedCourse ? selectedCourse.courseName : 'Unknown'
+    };
+
+    try {
+      const response = await fetch('http://localhost:8080/api/assignments/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if(response.ok) {
+         alert("Assignment Posted!");
+         handleCourseSelect(selectedCourseId);
+      }
+    } catch(err) { alert("Failed to post assignment."); }
+  };
+
   const removeStudent = (id) => {
     if (!window.confirm("Remove student from this class view?")) return;
     setEnrolledStudents(prev => prev.filter(s => s.id !== id));
@@ -300,30 +408,42 @@ const TeacherDashboard = () => {
       const res = await fetch('http://localhost:8080/api/attendance/mark', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: studentId, status: status, classId: parseInt(selectedCourseId) }), // FIXED!
+        body: JSON.stringify({ userId: studentId, status: status, classId: parseInt(selectedCourseId) }),
       });
       if (res.ok) alert(`${status} marked!`);
     } catch (e) { alert("Failed"); }
   };
-
-  const saveGrade = async (studentId, studentMarks) => {
+const saveGrade = async (studentId, studentMarks) => {
     if(!selectedCourseId) return alert("Please select a course first!");
+    
     const payload = {
-      userId: studentId, 
-      classId: parseInt(selectedCourseId), // FIXED: Now saves to the actual class!
+      userId: parseInt(studentId), 
+      classId: parseInt(selectedCourseId),
       quiz: parseInt(studentMarks?.quiz || 0),
       midterm: parseInt(studentMarks?.midterm || 0),
       assignment: parseInt(studentMarks?.assignment || 0),
       role: "TEACHER" 
     };
+    
     try {
       const res = await fetch('http://localhost:8080/api/grades/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      if (res.ok) { alert("Saved!"); fetchAnalytics(); }
-    } catch (e) { alert("Error"); }
+      
+      if (res.ok) { 
+        alert("Saved successfully!"); 
+        fetchAnalytics(); 
+      } else {
+        // NEW: Read the exact error from Spring Boot
+        const errText = await res.text();
+        alert("Backend Error: " + errText); 
+        console.error("Full Backend Error:", errText);
+      }
+    } catch (e) { 
+      alert("Network Error: " + e.message); 
+    }
   };
 
   const handleLogout = () => {
@@ -364,31 +484,39 @@ const TeacherDashboard = () => {
         </header>
 
         {activeTab === 'Dashboard' && <DashboardHome myCourses={myCourses} chartData={chartData} setActiveTab={setActiveTab} />}
-        
         {activeTab === 'My Classes' && <MyClassesView myCourses={myCourses} />}
         
         {activeTab === 'Attendance' && (
           <AttendanceView 
-            myCourses={myCourses} 
-            selectedCourseId={selectedCourseId}
-            handleCourseSelect={handleCourseSelect}
-            enrolledStudents={enrolledStudents} 
-            markRealTime={markRealTime} 
-            removeStudent={removeStudent} 
+            myCourses={myCourses} selectedCourseId={selectedCourseId}
+            handleCourseSelect={handleCourseSelect} enrolledStudents={enrolledStudents} 
+            markRealTime={markRealTime} removeStudent={removeStudent} 
           />
         )}
         
         {activeTab === 'Grade Book' && (
           <GradeBookView 
-            myCourses={myCourses} 
-            selectedCourseId={selectedCourseId}
-            handleCourseSelect={handleCourseSelect}
-            enrolledStudents={enrolledStudents} 
+            myCourses={myCourses} selectedCourseId={selectedCourseId}
+            handleCourseSelect={handleCourseSelect} enrolledStudents={enrolledStudents} 
             saveGrade={saveGrade} 
           />
         )}
+
+        {activeTab === 'Assignments' && (
+          <AssignmentsView 
+            myCourses={myCourses} selectedCourseId={selectedCourseId}
+            handleCourseSelect={handleCourseSelect} classAssignments={classAssignments}
+            handleCreateAssignment={handleCreateAssignment}
+          />
+        )}
+
+        {/* NEW: Render Reports View */}
+        {activeTab === 'Reports' && (
+          <ReportsView chartData={chartData} myCourses={myCourses} />
+        )}
         
-        {!['Dashboard', 'My Classes', 'Attendance', 'Grade Book'].includes(activeTab) && (
+        {/* UPDATED: Remove 'Reports' from the coming soon list */}
+        {!['Dashboard', 'My Classes', 'Attendance', 'Grade Book', 'Assignments', 'Reports'].includes(activeTab) && (
           <div className="bg-white p-20 rounded-[3rem] text-center border border-dashed border-gray-200">
             <h2 className="text-2xl font-black text-gray-300 uppercase tracking-widest">{activeTab} Coming Soon</h2>
             <p className="text-gray-400 mt-2">Linking to edutrack_db...</p>
