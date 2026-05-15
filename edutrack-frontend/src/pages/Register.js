@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
 const Register = () => {
   const navigate = useNavigate();
+  // State to track the selected role so we can show/hide the Access Code field
+  const [selectedRole, setSelectedRole] = useState('Student');
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -12,22 +14,26 @@ const Register = () => {
       return alert("Passwords do not match!");
     }
 
+    // Updated payload to perfectly match Spring Boot RegisterRequest.java DTO
     const payload = {
-      role: form.role.value.toUpperCase(),
-      name: form.fullName.value,
+      role: selectedRole.toUpperCase(),
+      fullName: form.fullName.value, // Changed from 'name' to 'fullName'
       email: form.email.value,
-      password: form.newPassword.value
+      password: form.newPassword.value,
+      // Pass the access code ONLY if they are staff
+      accessCode: (selectedRole === 'Teacher' || selectedRole === 'Admin') ? form.accessCode.value : null
     };
 
     try {
-      const response = await fetch('http://localhost:8080/api/users/add', {
+      // Changed endpoint from /add to /register to hit the secure controller
+      const response = await fetch('http://localhost:8080/api/users/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
       if (response.ok) {
-        alert("Account created successfully in MySQL!");
+        alert("Account created successfully! Please log in.");
         navigate('/login');
       } else {
         const errorText = await response.text();
@@ -62,20 +68,39 @@ const Register = () => {
         <div className="absolute -bottom-12 -right-12 w-96 h-96 border-[40px] border-indigo-400/10 rounded-full"></div>
       </div>
 
-      <div className="w-full lg:w-1/2 flex items-center justify-center bg-white p-8">
-        <div className="w-full max-w-md">
+      <div className="w-full lg:w-1/2 flex items-center justify-center bg-white p-8 overflow-y-auto">
+        <div className="w-full max-w-md py-8">
           <h2 className="text-3xl font-black text-indigo-950 mb-2">Create your account</h2>
           <p className="text-sm text-gray-500 font-medium mb-8">Fill in the details below to get started.</p>
 
           <form autoComplete="off" onSubmit={handleRegister} className="bg-white p-8 rounded-2xl border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] space-y-5">
+            
+            {/* ROLE SELECTOR */}
             <div>
               <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Role</label>
-              <select name="role" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-600 appearance-none">
-                <option>Student</option>
-                <option>Teacher</option>
-                <option>Admin</option>
+              <select 
+                name="role" 
+                value={selectedRole}
+                onChange={(e) => setSelectedRole(e.target.value)}
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-600 appearance-none cursor-pointer"
+              >
+                <option value="Student">Student</option>
+                <option value="Teacher">Teacher</option>
+                <option value="Admin">Admin</option>
               </select>
             </div>
+
+            {/* CONDITIONAL ACCESS CODE FIELD (Only shows for Teacher/Admin) */}
+            {(selectedRole === 'Teacher' || selectedRole === 'Admin') && (
+              <div className="animate-fade-in bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 border-dashed">
+                <label className="block text-[10px] font-bold text-indigo-600 uppercase tracking-widest mb-2">School Access Code <span className="text-red-500">*</span></label>
+                <div className="relative">
+                  <span className="absolute left-4 top-3 text-indigo-300">🔑</span>
+                  <input type="text" name="accessCode" placeholder="Enter EDU2026" required className="w-full pl-10 pr-4 py-3 bg-white border border-indigo-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-600 outline-none font-mono tracking-widest" />
+                </div>
+                <p className="text-[10px] font-bold text-indigo-400 mt-2">Required to verify staff status.</p>
+              </div>
+            )}
 
             <div>
               <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Full Name</label>

@@ -25,13 +25,18 @@ const Login = () => {
       });
 
       if (response.ok) {
-        const userData = await response.json();
+        // Parse the JSON response containing the token and user object
+        const data = await response.json();
         
-        // Save the authenticated user details to the browser
-        localStorage.setItem('edutrack_userId', userData.id);
-        localStorage.setItem('edutrack_userName', userData.name);
+        // 1. Save the VIP Wristband (JWT Token)
+        localStorage.setItem('edutrack_jwt', data.token);
 
-        // --- NEW: Accurate Routing Logic ---
+        // 2. Look INSIDE the "user" object to save details
+        localStorage.setItem('edutrack_userId', data.user.id);
+        localStorage.setItem('edutrack_userName', data.user.name);
+        localStorage.setItem('edutrack_userRole', data.user.role);
+
+        // --- Accurate Routing Logic ---
         if (role === 'Admin') {
           navigate('/admin');
         } else if (role === 'Teacher') {

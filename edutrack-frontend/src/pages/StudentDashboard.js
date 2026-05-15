@@ -41,6 +41,7 @@ const CourseCatalogView = ({ allCourses, myEnrollments, handleJoinCourse }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {allCourses.map(course => {
           const isEnrolled = myEnrollments.some(e => e.courseId === course.id);
+         
           return (
             <div key={course.id} className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 flex flex-col h-full hover:shadow-md transition">
               <div className="flex justify-between items-start mb-4">
@@ -87,7 +88,7 @@ const GradesView = ({ courses }) => (
       </thead>
       <tbody className="divide-y divide-gray-50">
         {courses.map((c, i) => (
-          <tr key={i} className="hover:bg-gray-50 transition">
+           <tr key={i} className="hover:bg-gray-50 transition">
             <td className="px-8 py-5">
               <p className="font-bold text-indigo-950">{c.subject}</p>
               <p className="text-[10px] text-gray-500">{c.teacher}</p>
@@ -123,7 +124,6 @@ const CalendarView = ({ myAssignments }) => (
           let dotColor = 'bg-indigo-500';
           if (task.type === 'ASSIGNMENT') dotColor = 'bg-teal-500';
           if (task.type === 'PROJECT') dotColor = 'bg-rose-500';
-
           return (
             <div key={i} className="relative pl-8">
               <div className={`absolute -left-[9px] top-4 w-4 h-4 rounded-full border-4 border-white ${dotColor} shadow-sm`}></div>
@@ -138,7 +138,7 @@ const CalendarView = ({ myAssignments }) => (
                     <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Due Date</p>
                     <p className="font-black text-rose-500 text-sm">{task.dueDate}</p>
                   </div>
-                </div>
+               </div>
               </div>
             </div>
           );
@@ -154,14 +154,14 @@ const AttendanceDetailsView = ({ attendanceData, courses }) => (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div className="lg:col-span-2 bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
         <h4 className="text-lg font-bold text-gray-800 mb-6">Monthly Overview</h4>
-        <div className="h-64">
+        <div className="h-64 min-h-[250px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={attendanceData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
               <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} />
               <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} domain={[60, 100]} />
               <Tooltip cursor={false} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
-              <ReferenceLine y={75} stroke="#f87171" strokeDasharray="3 3" label={{ position: 'insideTopLeft', value: 'Minimum Required: 75%', fill: '#f87171', fontSize: 10 }} />
+               <ReferenceLine y={75} stroke="#f87171" strokeDasharray="3 3" label={{ position: 'insideTopLeft', value: 'Minimum Required: 75%', fill: '#f87171', fontSize: 10 }} />
               <Line type="monotone" dataKey="val" stroke="#4f46e5" strokeWidth={3} dot={{r: 5, fill: '#ffffff', stroke: '#4f46e5', strokeWidth: 2}} activeDot={{r: 8}} />
             </LineChart>
           </ResponsiveContainer>
@@ -219,17 +219,14 @@ const AlertsView = () => (
   </div>
 );
 
-// --- UPGRADED: Educational Platform Profile View ---
 const ProfileView = ({ studentName, studentId }) => {
   const [notifications, setNotifications] = useState(true);
-
   return (
     <div className="space-y-8 text-left max-w-6xl">
        <h3 className="text-2xl font-black text-indigo-950 mb-6">Student Profile & Settings</h3>
 
        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* Left Column: Identity & Contact Card */}
           <div className="space-y-8">
              <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 text-center">
                 <div className="w-32 h-32 mx-auto rounded-full overflow-hidden border-4 border-indigo-50 shadow-md mb-4">
@@ -253,10 +250,7 @@ const ProfileView = ({ studentName, studentId }) => {
              </div>
           </div>
 
-          {/* Right Column: Academic Portfolio & Preferences */}
           <div className="lg:col-span-2 space-y-8">
-             
-             {/* Academic Details */}
              <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
                 <h4 className="text-lg font-bold text-gray-800 mb-6">Academic Overview</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -279,7 +273,6 @@ const ProfileView = ({ studentName, studentId }) => {
                 </div>
              </div>
 
-             {/* Earned Badges/Certificates */}
              <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
                 <h4 className="text-lg font-bold text-gray-800 mb-6">Credentials & Certifications</h4>
                 <div className="flex gap-4 overflow-x-auto pb-2">
@@ -301,7 +294,6 @@ const ProfileView = ({ studentName, studentId }) => {
                 </div>
              </div>
 
-             {/* Preferences */}
              <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
                 <h4 className="text-lg font-bold text-gray-800 mb-6">Preferences</h4>
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
@@ -314,7 +306,6 @@ const ProfileView = ({ studentName, studentId }) => {
                   </div>
                 </div>
              </div>
-
           </div>
        </div>
     </div>
@@ -332,8 +323,7 @@ const StudentDashboard = () => {
   
   const [allCourses, setAllCourses] = useState([]);
   const [myEnrollments, setMyEnrollments] = useState([]);
-  const [myAssignments, setMyAssignments] = useState([]); 
-  
+  const [myAssignments, setMyAssignments] = useState([]);
   const [courses, setCourses] = useState([
     { subject: 'Mathematics', teacher: 'Mr. Kumar', score: 0, grade: 'N/A', color: '#4f46e5', hex: 'text-indigo-600', bg: 'bg-indigo-50' },
     { subject: 'Science', teacher: 'Ms. Park', score: 0, grade: 'N/A', color: '#0ea5e9', hex: 'text-sky-600', bg: 'bg-sky-50' },
@@ -341,6 +331,14 @@ const StudentDashboard = () => {
     { subject: 'History', teacher: 'Ms. Wilson', score: 85, grade: 'B', color: '#f59e0b', hex: 'text-amber-600', bg: 'bg-amber-50' },
     { subject: 'Computer Sci', teacher: 'Mr. Lee', score: 95, grade: 'A+', color: '#334155', hex: 'text-slate-600', bg: 'bg-slate-50' }
   ]);
+
+  // Token Helper
+  const getAuthHeaders = () => {
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('edutrack_jwt')}`
+    };
+  };
 
   const calculateGrade = (score) => {
     if (score >= 90) return 'A+';
@@ -353,20 +351,21 @@ const StudentDashboard = () => {
 
   const fetchData = async (id) => {
     try {
-      const courseRes = await fetch('http://localhost:8080/api/courses');
+      const headers = getAuthHeaders();
+      const courseRes = await fetch('http://localhost:8080/api/courses', { headers });
       if (courseRes.ok) setAllCourses(await courseRes.json());
 
-      const enrollRes = await fetch(`http://localhost:8080/api/enrollments/student/${id}`);
+      const enrollRes = await fetch(`http://localhost:8080/api/enrollments/student/${id}`, { headers });
       if (enrollRes.ok) setMyEnrollments(await enrollRes.json());
 
-      const assignRes = await fetch(`http://localhost:8080/api/assignments/student/${id}`);
+      const assignRes = await fetch(`http://localhost:8080/api/assignments/student/${id}`, { headers });
       if (assignRes.ok) setMyAssignments(await assignRes.json());
 
-      const gradeRes = await fetch(`http://localhost:8080/api/grades/${id}`);
+      const gradeRes = await fetch(`http://localhost:8080/api/grades/${id}`, { headers });
       if (gradeRes.ok) {
         const gradeData = await gradeRes.json();
         if (gradeData && gradeData.length > 0) {
-          const marks = gradeData[gradeData.length - 1]; 
+          const marks = gradeData[gradeData.length - 1];
           setCourses(prev => [
             { ...prev[0], score: marks.quiz || 0, grade: calculateGrade(marks.quiz || 0) },
             { ...prev[1], score: marks.midterm || 0, grade: calculateGrade(marks.midterm || 0) },
@@ -395,7 +394,6 @@ const StudentDashboard = () => {
 
     updateTime(); 
     const timerId = setInterval(updateTime, 60000); 
-
     return () => clearInterval(timerId);
   }, []);
 
@@ -404,10 +402,9 @@ const StudentDashboard = () => {
       const payload = { studentId: parseInt(studentId), courseId: parseInt(courseId) };
       const response = await fetch('http://localhost:8080/api/enrollments/join', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(payload)
       });
-      
       if (response.ok) {
         alert("Successfully enrolled in class!");
         fetchData(studentId);
@@ -433,7 +430,6 @@ const StudentDashboard = () => {
 
   return (
     <div className="flex min-h-screen bg-[#f8fafc] font-sans text-left">
-      
       <aside className="w-64 bg-[#2e268a] text-white hidden xl:flex flex-col fixed h-full z-10">
         <div className="p-6 flex items-center gap-3 border-b border-white/10">
           <div className="w-8 h-8 bg-white/20 rounded flex items-center justify-center font-black">E</div>
@@ -454,7 +450,6 @@ const StudentDashboard = () => {
       </aside>
 
       <main className="flex-1 xl:ml-64 px-8 pt-6 pb-12">
-        
         <header className="flex justify-between items-center mb-8 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-800">Good morning, {studentName}!</h1>
@@ -478,7 +473,7 @@ const StudentDashboard = () => {
                   <p className="text-[10px] text-gray-400 mt-1">7 absences this sem</p>
                 </div>
                 <CircularProgress value={87} color="#22c55e" />
-              </div>
+               </div>
               <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
                 <div>
                   <p className="text-gray-400 text-xs font-bold uppercase mb-1">GPA</p>
@@ -523,7 +518,7 @@ const StudentDashboard = () => {
                         </div>
                         <span className="text-xs font-bold text-gray-500 w-8 text-right">{course.score}%</span>
                         <span className={`w-8 py-1 rounded text-center text-xs font-bold ${course.bg} ${course.hex}`}>{course.grade}</span>
-                      </div>
+                       </div>
                     ))}
                  </div>
               </div>
@@ -555,7 +550,7 @@ const StudentDashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                   <h3 className="text-sm font-bold text-gray-800 mb-6">Attendance Trend</h3>
-                  <div className="h-48">
+                  <div className="h-48 min-h-[200px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={attendanceData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -571,7 +566,7 @@ const StudentDashboard = () => {
 
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                   <h3 className="text-sm font-bold text-gray-800 mb-6">Grades by Subject</h3>
-                  <div className="h-48">
+                  <div className="h-48 min-h-[200px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={courses} layout="vertical" margin={{ top: 0, right: 10, left: 0, bottom: 0 }}>
                         <XAxis type="number" hide domain={[0, 100]} />

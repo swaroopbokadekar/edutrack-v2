@@ -92,7 +92,7 @@ const LandingPage = () => {
         <section className="relative py-24 px-6 lg:px-12 overflow-hidden bg-subtle-gradient" id="philosophy">
           <div className="absolute inset-0 z-0">
             {/* Added: Stylyzed illustrative library background */}
-            <img alt="Soft illustrative rendering of a serene library study space" className="w-full h-full object-cover object-center" src="image_edac19.jpg" />
+            {/* <img alt="Serene library study space" className="w-full h-full object-cover object-center" src="https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=2070&auto=format&fit=crop" /> */}
             <div className="absolute inset-0 bg-[#e8eaf0]/70 backdrop-blur-[1px]"></div>
             <div className="absolute inset-0 bg-gradient-to-b from-[#e8eaf0]/30 via-transparent to-[#e8eaf0]"></div>
           </div>
