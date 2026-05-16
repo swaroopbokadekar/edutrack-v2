@@ -3,29 +3,27 @@ import { useNavigate, Link } from 'react-router-dom';
 
 const Register = () => {
   const navigate = useNavigate();
-  // State to track the selected role so we can show/hide the Access Code field
   const [selectedRole, setSelectedRole] = useState('Student');
+  const [error, setError] = useState('');
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    setError('');
     
     const form = e.target;
     if (form.newPassword.value !== form.confirmPassword.value) {
-      return alert("Passwords do not match!");
+      return setError("Passwords do not match!");
     }
 
-    // Updated payload to perfectly match Spring Boot RegisterRequest.java DTO
     const payload = {
       role: selectedRole.toUpperCase(),
-      fullName: form.fullName.value, // Changed from 'name' to 'fullName'
+      fullName: form.fullName.value, 
       email: form.email.value,
       password: form.newPassword.value,
-      // Pass the access code ONLY if they are staff
       accessCode: (selectedRole === 'Teacher' || selectedRole === 'Admin') ? form.accessCode.value : null
     };
 
     try {
-      // Changed endpoint from /add to /register to hit the secure controller
       const response = await fetch('http://localhost:8080/api/users/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -33,132 +31,104 @@ const Register = () => {
       });
 
       if (response.ok) {
-        alert("Account created successfully! Please log in.");
         navigate('/login');
       } else {
-        const errorText = await response.text();
-        alert("Registration failed: " + errorText);
+        const errText = await response.text();
+        setError(errText || "Registration failed. Email might be taken.");
       }
-    } catch (error) {
-      alert("Cannot connect to server. Is Spring Boot running?");
+    } catch (err) {
+      setError("Network Error: Cannot connect to server.");
     }
   };
 
   return (
-    <div className="flex min-h-screen font-sans text-left">
-      <div className="hidden lg:flex flex-col justify-center w-1/2 bg-gradient-to-br from-[#4f46e5] to-[#312e81] text-white p-16 relative overflow-hidden">
-        <div className="absolute top-16 left-16 flex items-center gap-3">
-          <div className="w-8 h-8 bg-white text-indigo-700 rounded-lg flex items-center justify-center font-black">E</div>
-          <span className="text-xl font-black tracking-tighter">EduTrack</span>
-        </div>
+    <div className="min-h-screen flex bg-slate-50 font-sans">
+      
+      {/* Left Side - Branding (Hidden on mobile) */}
+      <div className="hidden lg:flex lg:w-1/2 bg-slate-900 relative overflow-hidden flex-col justify-between p-12">
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-indigo-900/50 to-slate-900 z-0"></div>
+        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-indigo-600 rounded-full blur-3xl opacity-20"></div>
+        <div className="absolute top-0 right-0 w-3/4 h-3/4 bg-emerald-600 rounded-full blur-3xl opacity-10"></div>
         
-        <div className="z-10 mt-10">
-          <h1 className="text-4xl font-black mb-4 leading-tight w-3/4">Join thousands of educators and students</h1>
-          <p className="text-indigo-200 mb-12 text-sm w-3/4">Create your account today and experience the future of educational management.</p>
-          
-          <div className="grid grid-cols-2 gap-4 w-3/4">
-             <div className="h-16 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 flex items-center justify-center"><div className="w-12 h-2 bg-white/30 rounded-full"></div></div>
-             <div className="h-16 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 flex items-center justify-center"><div className="w-12 h-2 bg-white/30 rounded-full"></div></div>
-             <div className="h-16 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 flex items-center justify-center"><div className="w-12 h-2 bg-white/30 rounded-full"></div></div>
-             <div className="h-16 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 flex items-center justify-center"><div className="w-12 h-2 bg-white/30 rounded-full"></div></div>
-          </div>
+        <div className="relative z-10 flex items-center gap-3">
+          <div className="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg">E</div>
+          <span className="text-2xl font-black text-white tracking-tight">EduTrack<span className="text-indigo-400">.</span></span>
         </div>
 
-        <div className="absolute -bottom-24 -right-24 w-96 h-96 border-[40px] border-indigo-500/20 rounded-full"></div>
-        <div className="absolute -bottom-12 -right-12 w-96 h-96 border-[40px] border-indigo-400/10 rounded-full"></div>
+        <div className="relative z-10">
+          <h1 className="text-5xl font-black text-white mb-6 leading-tight">Join the future<br/>of learning.</h1>
+          <p className="text-slate-400 text-lg max-w-md">Create your account to unlock powerful tools designed for modern education.</p>
+        </div>
+
+        <div className="relative z-10 flex gap-4 text-sm text-slate-500 font-medium">
+          <span>© 2026 EduTrack Global</span>
+        </div>
       </div>
 
-      <div className="w-full lg:w-1/2 flex items-center justify-center bg-white p-8 overflow-y-auto">
-        <div className="w-full max-w-md py-8">
-          <h2 className="text-3xl font-black text-indigo-950 mb-2">Create your account</h2>
-          <p className="text-sm text-gray-500 font-medium mb-8">Fill in the details below to get started.</p>
+      {/* Right Side - Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
+        <div className="w-full max-w-md bg-white p-10 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 animate-fade-in-up">
+          
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-black text-slate-800">Create an Account</h2>
+            <p className="text-sm text-slate-500 mt-2 font-medium">Setup your profile to get started.</p>
+          </div>
 
-          <form autoComplete="off" onSubmit={handleRegister} className="bg-white p-8 rounded-2xl border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] space-y-5">
+          {error && (
+            <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-600 text-sm font-bold rounded-xl text-center">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleRegister} className="space-y-4">
             
-            {/* ROLE SELECTOR */}
-            <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Role</label>
-              <select 
-                name="role" 
-                value={selectedRole}
-                onChange={(e) => setSelectedRole(e.target.value)}
-                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-600 appearance-none cursor-pointer"
-              >
-                <option value="Student">Student</option>
-                <option value="Teacher">Teacher</option>
-                <option value="Admin">Admin</option>
-              </select>
+            {/* Custom Role Selector Pills */}
+            <div className="bg-slate-50 p-1.5 rounded-xl border border-slate-200 flex mb-4">
+              {['Student', 'Teacher', 'Admin'].map(r => (
+                <button
+                  key={r} type="button" onClick={() => setSelectedRole(r)}
+                  className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${selectedRole === r ? 'bg-white text-indigo-600 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  {r}
+                </button>
+              ))}
             </div>
 
-            {/* CONDITIONAL ACCESS CODE FIELD (Only shows for Teacher/Admin) */}
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Full Name</label>
+              <input name="fullName" type="text" required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all" placeholder="John Doe" />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Email Address</label>
+              <input name="email" type="email" required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all" placeholder={`john@${selectedRole.toLowerCase()}.edutrack.edu`} />
+            </div>
+
             {(selectedRole === 'Teacher' || selectedRole === 'Admin') && (
-              <div className="animate-fade-in bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 border-dashed">
-                <label className="block text-[10px] font-bold text-indigo-600 uppercase tracking-widest mb-2">School Access Code <span className="text-red-500">*</span></label>
-                <div className="relative">
-                  <span className="absolute left-4 top-3 text-indigo-300">🔑</span>
-                  <input type="text" name="accessCode" placeholder="Enter EDU2026" required className="w-full pl-10 pr-4 py-3 bg-white border border-indigo-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-600 outline-none font-mono tracking-widest" />
-                </div>
-                <p className="text-[10px] font-bold text-indigo-400 mt-2">Required to verify staff status.</p>
+              <div className="animate-fade-in-up">
+                <label className="block text-xs font-bold text-emerald-600 uppercase tracking-wider mb-2">Staff Access Code</label>
+                <input name="accessCode" type="password" required className="w-full px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm font-bold text-emerald-800 outline-none focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all" placeholder="Enter EDU2026" />
               </div>
             )}
 
-            <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Full Name</label>
-              <div className="relative">
-                <span className="absolute left-4 top-3 text-gray-300">👤</span>
-                <input type="text" name="fullName" autoComplete="name" placeholder="Jane Doe" required className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-600 outline-none" />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Email address</label>
-              <div className="relative">
-                <span className="absolute left-4 top-3 text-gray-300">✉</span>
-                <input type="email" name="email" autoComplete="email" placeholder="jane@example.com" required className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-600 outline-none" />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Institution / School Name</label>
-              <div className="relative">
-                <span className="absolute left-4 top-3 text-gray-300">🏛</span>
-                <input type="text" name="institution" autoComplete="organization" placeholder="Westview High School" required className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-600 outline-none" />
-              </div>
-            </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Password</label>
-                <div className="relative">
-                  <span className="absolute left-4 top-3 text-gray-300">🔒</span>
-                  <input type="password" name="newPassword" autoComplete="new-password" placeholder="••••••••" required className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-600 outline-none" />
-                </div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Password</label>
+                <input name="newPassword" type="password" required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all" placeholder="••••••••" />
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Confirm Password</label>
-                <div className="relative">
-                  <span className="absolute left-4 top-3 text-gray-300">🔒</span>
-                  <input type="password" name="confirmPassword" autoComplete="new-password" placeholder="••••••••" required className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-600 outline-none" />
-                </div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Confirm</label>
+                <input name="confirmPassword" type="password" required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all" placeholder="••••••••" />
               </div>
             </div>
 
-            <div className="pt-2">
-              <label className="flex items-start gap-2 cursor-pointer">
-                <input type="checkbox" required className="mt-1 w-4 h-4 rounded border-gray-300 text-indigo-600" />
-                <span className="text-[10px] font-bold text-gray-500 leading-tight">
-                  I agree to the <span className="text-indigo-600 cursor-pointer hover:underline">Terms of Service</span> and <span className="text-indigo-600 cursor-pointer hover:underline">Privacy Policy</span>.
-                </span>
-              </label>
-            </div>
-
-            <button type="submit" className="w-full mt-4 bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-all flex justify-center items-center gap-2 cursor-pointer">
-              Create Account <span className="text-lg leading-none">›</span>
+            <button type="submit" className="w-full bg-slate-900 hover:bg-indigo-600 text-white font-bold py-3.5 rounded-xl transition-colors shadow-md mt-6 cursor-pointer flex justify-center items-center gap-2">
+              Create Account <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
             </button>
           </form>
 
-          <p className="text-center text-xs font-bold text-gray-500 mt-8">
-            Already have an account? <Link to="/login" className="text-indigo-600 hover:text-indigo-800 font-black">Sign in</Link>
+          <p className="text-center text-sm font-medium text-slate-500 mt-6 border-t border-slate-100 pt-6">
+            Already have an account? <Link to="/login" className="text-indigo-600 font-bold hover:underline">Sign in here</Link>
           </p>
         </div>
       </div>
